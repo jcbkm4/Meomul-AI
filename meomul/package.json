@@ -109,12 +109,15 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "apps/**/*.(t|j)s",
+      "!apps/**/*.spec.ts",
+      "!apps/**/*.d.ts"
     ],
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/meomul-api/"
+      "<rootDir>/apps/meomul-api/",
+      "<rootDir>/apps/meomul-batch/"
     ]
   }
 }
