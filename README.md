@@ -132,9 +132,17 @@ read `healthy`, not just `running`.
 The batch worker has no HEALTHCHECK because it runs no HTTP listener; its liveness is
 visible through the cron lock records and the failure webhook.
 
-`scripts/digitalocean/` and `scripts/azure/` hold deploy scripts for those providers.
-**The current target is Google Cloud and that path is not yet built** — see the
-production-readiness plan before deploying.
+**The current target is Google Cloud** — a single Compute Engine VM running this same
+Compose stack. See [`scripts/gcp/README.md`](scripts/gcp/README.md) for the full setup:
+
+```bash
+PROJECT_ID=your-project ./scripts/gcp/create-vm.sh   # once, from your workstation
+sudo bash scripts/gcp/bootstrap-vm.sh                # once, on the VM
+sudo bash scripts/gcp/deploy-vm.sh                   # every deploy
+```
+
+`scripts/digitalocean/` and `scripts/azure/` hold scripts for those providers from
+earlier evaluations. Neither is the active path.
 
 ## Known pre-launch gaps
 
