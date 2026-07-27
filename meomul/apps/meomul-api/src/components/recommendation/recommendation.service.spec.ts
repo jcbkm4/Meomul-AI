@@ -138,7 +138,10 @@ describe('RecommendationService', () => {
 			behaviorMaturity: 0.2,
 		});
 
-		jest
+		// Four stages run in order: strict, relaxed, general, exploration. Every one must be
+		// stubbed — an unstubbed call falls through to the real implementation and hits the
+		// empty hotel model, which is how this test used to fail.
+		const stageSpy = jest
 			.spyOn(spyAccess, 'runRecommendationStage')
 			.mockResolvedValueOnce({
 				hotels: [createHotel('h-strict', 'SEOUL')],
@@ -152,6 +155,11 @@ describe('RecommendationService', () => {
 			})
 			.mockResolvedValueOnce({
 				hotels: [createHotel('h-general', 'BUSAN')],
+				fallbackCount: 0,
+				matchedLocationCount: 0,
+			})
+			.mockResolvedValueOnce({
+				hotels: [],
 				fallbackCount: 0,
 				matchedLocationCount: 0,
 			});
@@ -168,6 +176,16 @@ describe('RecommendationService', () => {
 		expect(result.meta.fallbackCount).toBe(1);
 		expect(result.meta.matchedLocationCount).toBe(2);
 		expect(result.explanations).toHaveLength(4);
+
+		// The exploration stage deliberately looks outside the member's preferred locations,
+		// so it must exclude them and must not fall back within the facet.
+		expect(stageSpy).toHaveBeenCalledTimes(4);
+		expect(stageSpy).toHaveBeenNthCalledWith(
+			4,
+			expect.anything(),
+			expect.any(Number),
+			expect.objectContaining({ excludePreferredLocations: true, allowFacetFallback: false }),
+		);
 		expect(cacheManager.set).toHaveBeenCalledWith(
 			expect.stringContaining(`rec:${memberId}:v-stage:algo-5:4`),
 			result,
