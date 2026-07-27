@@ -16,18 +16,7 @@ import { ChatScope } from '../libs/enums/common.enum';
 import type { ChatDocument } from '../libs/types/chat';
 import type { HotelDocument } from '../libs/types/hotel';
 import { AuthService } from '../components/auth/auth.service';
-
-const resolveSocketOrigins = (): string[] => {
-	const envList = (process.env.SOCKET_CORS_ORIGINS ?? '')
-		.split(',')
-		.map((origin) => origin.trim())
-		.filter(Boolean);
-	const frontendUrl = process.env.FRONTEND_URL?.trim();
-
-	return Array.from(
-		new Set(['http://localhost:3000', 'http://localhost:3001', ...(frontendUrl ? [frontendUrl] : []), ...envList]),
-	);
-};
+import { resolveSocketOrigins } from '../libs/utils/socket-origins';
 
 interface UserSession {
 	socketId: string;

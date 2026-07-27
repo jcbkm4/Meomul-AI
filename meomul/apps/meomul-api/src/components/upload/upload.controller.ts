@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import type * as multer from 'multer';
 import { mkdirSync } from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -55,6 +56,35 @@ function createStorage(getTarget: (req: UploadRequest) => string) {
 	});
 }
 
+/**
+ * Builds a multer `fileFilter` that authorizes the request *before* anything is written
+ * to disk. Multer runs `fileFilter` ahead of the storage engine, and Nest runs guards
+ * ahead of interceptors, so `req.member` is already populated by `UploadGuard` here.
+ * Rejecting at this point means an unauthorized upload never lands on the filesystem.
+ */
+function createFileFilter(allowedMimeTypes: string[], invalidTypeMessage: string) {
+	return (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback): void => {
+		try {
+			const target = validateUploadTarget((req as UploadRequest).query.target ?? 'hotel');
+			assertTargetPermission(req as UploadRequest, target);
+		} catch (error) {
+			return cb(error as Error);
+		}
+
+		if (!allowedMimeTypes.includes(file.mimetype)) {
+			return cb(new BadRequestException(invalidTypeMessage));
+		}
+
+		const ext = path.extname(file.originalname).toLowerCase();
+		const allowedExts = MIME_TO_EXTENSIONS[file.mimetype];
+		if (allowedExts && !allowedExts.includes(ext)) {
+			return cb(new BadRequestException('File extension does not match its content type'));
+		}
+
+		cb(null, true);
+	};
+}
+
 const TARGET_PERMISSIONS: Record<UploadTarget, MemberType[]> = {
 	member: [MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR],
 	hotel: [MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR],
@@ -63,6 +93,29 @@ const TARGET_PERMISSIONS: Record<UploadTarget, MemberType[]> = {
 	refund: [MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR],
 	chat: [MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR],
 };
+
+function validateUploadTarget(target: string): UploadTarget {
+	if (!VALID_TARGETS.includes(target as UploadTarget)) {
+		throw new BadRequestException('Invalid upload target');
+	}
+	return target as UploadTarget;
+}
+
+function assertTargetPermission(req: UploadRequest, target: UploadTarget): void {
+	const memberType = req.member?.memberType;
+	if (!memberType) {
+		throw new ForbiddenException(Messages.NOT_ALLOWED_REQUEST);
+	}
+
+	const allowedRoles = TARGET_PERMISSIONS[target];
+	if (!allowedRoles.includes(memberType)) {
+		throw new ForbiddenException(Messages.NOT_ALLOWED_REQUEST);
+	}
+	// Compare through `req.member?.` rather than the local so TS narrows `req.member` to defined.
+	if (req.member?.memberType === MemberType.AGENT && (target === 'hotel' || target === 'room')) {
+		assertApprovedHostAccess(req.member);
+	}
+}
 
 @Controller('upload')
 @UseGuards(UploadGuard)
@@ -85,17 +138,7 @@ export class UploadController {
 				return req.query.target ?? 'hotel';
 			}),
 			limits: { fileSize: IMAGE_SIZE_LIMIT },
-			fileFilter: (_req, file, cb) => {
-				if (!IMAGE_MIME_TYPES.includes(file.mimetype)) {
-					return cb(new BadRequestException(Messages.PROVIDE_ALLOWED_FORMAT), false);
-				}
-				const ext = path.extname(file.originalname).toLowerCase();
-				const allowedExts = MIME_TO_EXTENSIONS[file.mimetype];
-				if (allowedExts && !allowedExts.includes(ext)) {
-					return cb(new BadRequestException('File extension does not match its content type'), false);
-				}
-				cb(null, true);
-			},
+			fileFilter: createFileFilter(IMAGE_MIME_TYPES, Messages.PROVIDE_ALLOWED_FORMAT),
 		}),
 	)
 	public uploadImage(
@@ -107,8 +150,8 @@ export class UploadController {
 			throw new BadRequestException(Messages.UPLOAD_FAILED);
 		}
 
-		const safeTarget = this.validateUploadTarget(target);
-		this.assertTargetPermission(req, safeTarget);
+		const safeTarget = validateUploadTarget(target);
+		assertTargetPermission(req, safeTarget);
 		const url = `uploads/${safeTarget}/${file.filename}`;
 
 		this.logger.log('Image uploaded', url);
@@ -131,17 +174,7 @@ export class UploadController {
 				return req.query.target ?? 'hotel';
 			}),
 			limits: { fileSize: VIDEO_SIZE_LIMIT },
-			fileFilter: (_req, file, cb) => {
-				if (!VIDEO_MIME_TYPES.includes(file.mimetype)) {
-					return cb(new BadRequestException('Please provide a valid video format (mp4, mov, webm)!'), false);
-				}
-				const ext = path.extname(file.originalname).toLowerCase();
-				const allowedExts = MIME_TO_EXTENSIONS[file.mimetype];
-				if (allowedExts && !allowedExts.includes(ext)) {
-					return cb(new BadRequestException('File extension does not match its content type'), false);
-				}
-				cb(null, true);
-			},
+			fileFilter: createFileFilter(VIDEO_MIME_TYPES, 'Please provide a valid video format (mp4, mov, webm)!'),
 		}),
 	)
 	public uploadVideo(
@@ -153,36 +186,11 @@ export class UploadController {
 			throw new BadRequestException(Messages.UPLOAD_FAILED);
 		}
 
-		const safeTarget = this.validateUploadTarget(target);
-		this.assertTargetPermission(req, safeTarget);
+		const safeTarget = validateUploadTarget(target);
+		assertTargetPermission(req, safeTarget);
 		const url = `uploads/${safeTarget}/${file.filename}`;
 
 		this.logger.log('Video uploaded', url);
 		return { url };
-	}
-
-	private validateUploadTarget(target: string): UploadTarget {
-		if (!VALID_TARGETS.includes(target as UploadTarget)) {
-			throw new BadRequestException('Invalid upload target');
-		}
-		return target as UploadTarget;
-	}
-
-	private assertTargetPermission(req: UploadRequest, target: UploadTarget): void {
-		const memberType = req.member?.memberType;
-		if (!memberType) {
-			throw new ForbiddenException(Messages.NOT_ALLOWED_REQUEST);
-		}
-
-		const allowedRoles = TARGET_PERMISSIONS[target];
-		if (!allowedRoles.includes(memberType)) {
-			throw new ForbiddenException(Messages.NOT_ALLOWED_REQUEST);
-		}
-		if (
-			req.member?.memberType === MemberType.AGENT &&
-			(target === 'hotel' || target === 'room')
-		) {
-			assertApprovedHostAccess(req.member);
-		}
 	}
 }
