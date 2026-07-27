@@ -49,7 +49,7 @@ describe('CronLockService', () => {
 
 		await service.runLocked(JOB, TTL, jest.fn().mockResolvedValue(undefined));
 
-		const [filter] = jobLockModel.findOneAndUpdate.mock.calls[0] as [Record<string, unknown>];
+		const [filter] = jobLockModel.findOneAndUpdate.mock.calls[0];
 		expect(filter.name).toBe(JOB);
 
 		// Without this condition a second container would steal a live lock: it claims

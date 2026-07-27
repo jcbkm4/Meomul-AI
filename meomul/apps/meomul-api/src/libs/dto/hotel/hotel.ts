@@ -1,5 +1,5 @@
 import { Field, ObjectType, Int, Float } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 import {
 	HotelType,
 	HotelLocation,
@@ -197,10 +197,10 @@ export class StrikeHistoryDto {
 @ObjectType()
 export class HotelDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	memberId: ObjectId;
+	memberId: Types.ObjectId;
 
 	// Basic Info
 	@Field(() => HotelType)

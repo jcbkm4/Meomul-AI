@@ -1,5 +1,5 @@
 import { Field, ObjectType, Int } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 import { RoomType, RoomStatus, BedType, ViewType } from '../../enums/room.enum';
 
 @ObjectType()
@@ -23,10 +23,10 @@ export class LastMinuteDealDto {
 @ObjectType()
 export class RoomDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	hotelId: ObjectId;
+	hotelId: Types.ObjectId;
 
 	@Field(() => RoomType)
 	roomType: RoomType;

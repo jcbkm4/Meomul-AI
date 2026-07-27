@@ -28,6 +28,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # `nest build` bundles through webpack and does not surface every type error, so
+      # tsc runs separately as its own gate.
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Test
         run: npm test
 

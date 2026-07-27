@@ -1,5 +1,5 @@
 import { Field, ObjectType, Int } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 import { MetaCounterDto } from '../common/pagination';
 import { MemberStatus } from '../../enums/member.enum';
 
@@ -9,7 +9,7 @@ import { MemberStatus } from '../../enums/member.enum';
 @ObjectType()
 export class MemberBasicDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
 	memberNick: string;
@@ -33,13 +33,13 @@ export class MemberBasicDto {
 @ObjectType()
 export class FollowDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	followerId: ObjectId;
+	followerId: Types.ObjectId;
 
 	@Field(() => String)
-	followingId: ObjectId;
+	followingId: Types.ObjectId;
 
 	@Field(() => Date)
 	createdAt: Date;

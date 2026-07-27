@@ -1,15 +1,15 @@
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 import { HotelLocation, HotelType } from '../../enums/hotel.enum';
 import { StayPurpose } from '../../enums/common.enum';
 
 @ObjectType()
 export class SearchHistoryDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	memberId: ObjectId;
+	memberId: Types.ObjectId;
 
 	@Field(() => HotelLocation, { nullable: true })
 	location?: HotelLocation;

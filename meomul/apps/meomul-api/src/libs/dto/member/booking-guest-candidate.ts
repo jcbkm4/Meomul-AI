@@ -1,10 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 
 @ObjectType()
 export class BookingGuestCandidateDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
 	memberNick: string;

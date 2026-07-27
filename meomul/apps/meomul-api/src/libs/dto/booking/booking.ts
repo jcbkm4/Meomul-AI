@@ -1,5 +1,5 @@
 import { Field, ObjectType, Int } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 import { BookingStatus, PaymentStatus, PaymentMethod, CancellationFlow } from '../../enums/booking.enum';
 import { MemberType } from '../../enums/member.enum';
 import { HotelType } from '../../enums/hotel.enum';
@@ -7,7 +7,7 @@ import { HotelType } from '../../enums/hotel.enum';
 @ObjectType()
 export class BookedRoomDto {
 	@Field(() => String)
-	roomId: ObjectId;
+	roomId: Types.ObjectId;
 
 	@Field(() => String)
 	roomType: string;
@@ -25,13 +25,13 @@ export class BookedRoomDto {
 @ObjectType()
 export class BookingDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	guestId: ObjectId;
+	guestId: Types.ObjectId;
 
 	@Field(() => String)
-	hotelId: ObjectId;
+	hotelId: Types.ObjectId;
 
 	@Field(() => [BookedRoomDto])
 	rooms: BookedRoomDto[];

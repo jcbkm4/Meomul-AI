@@ -1,13 +1,13 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 
 @ObjectType()
 export class RoomInventoryDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	roomId: ObjectId;
+	roomId: Types.ObjectId;
 
 	@Field(() => Date)
 	date: Date;

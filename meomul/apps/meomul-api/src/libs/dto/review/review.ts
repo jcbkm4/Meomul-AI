@@ -1,5 +1,5 @@
 import { Field, ObjectType, Int, Float } from '@nestjs/graphql';
-import type { ObjectId } from 'mongoose';
+import type { Types } from 'mongoose';
 import { ReviewStatus } from '../../enums/common.enum';
 
 @ObjectType()
@@ -8,7 +8,7 @@ export class HotelResponseDto {
 	responseText: string;
 
 	@Field(() => String, { nullable: true })
-	respondedBy?: ObjectId | null;
+	respondedBy?: Types.ObjectId | null;
 
 	@Field(() => Date, { nullable: true })
 	respondedAt?: Date | null;
@@ -17,10 +17,10 @@ export class HotelResponseDto {
 @ObjectType()
 export class ReviewDto {
 	@Field(() => String)
-	_id: ObjectId;
+	_id: Types.ObjectId;
 
 	@Field(() => String)
-	reviewerId: ObjectId;
+	reviewerId: Types.ObjectId;
 
 	@Field(() => String, { nullable: true })
 	reviewerNick?: string;
@@ -29,10 +29,10 @@ export class ReviewDto {
 	reviewerImage?: string;
 
 	@Field(() => String)
-	hotelId: ObjectId;
+	hotelId: Types.ObjectId;
 
 	@Field(() => String)
-	bookingId: ObjectId;
+	bookingId: Types.ObjectId;
 
 	@Field(() => Boolean)
 	verifiedStay: boolean;
