@@ -4,11 +4,11 @@ This is the single-page ER model intended for portfolio presentation.
 
 Asset:
 
-- `/Users/kamil/Desktop/Meomul/docs/assets/meomul-er-model-portfolio.svg`
+- `docs/assets/meomul-er-model-portfolio.svg`
 
 Scope:
 
-- Uses only real persistence-layer schemas from `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas`
+- Uses only real persistence-layer schemas from `meomul/apps/meomul-api/src/schemas`
 - Removes DTO, response model, input model, transport type, and generated frontend type noise
 - Keeps the diagram at business-entity level so it stays readable on one page
 
@@ -42,18 +42,18 @@ Rationale for exclusions:
 
 Source schemas:
 
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Member.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/HostApplication.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Notification.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Follow.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/UserProfile.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Hotel.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Room.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/RoomInventory.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Booking.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Review.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/SearchHistory.model.ts`
-- `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas/Chat.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Member.model.ts`
+- `meomul/apps/meomul-api/src/schemas/HostApplication.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Notification.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Follow.model.ts`
+- `meomul/apps/meomul-api/src/schemas/UserProfile.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Hotel.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Room.model.ts`
+- `meomul/apps/meomul-api/src/schemas/RoomInventory.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Booking.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Review.model.ts`
+- `meomul/apps/meomul-api/src/schemas/SearchHistory.model.ts`
+- `meomul/apps/meomul-api/src/schemas/Chat.model.ts`
 
 Layout principle:
 

@@ -1,6 +1,6 @@
 # Meomul ER Model
 
-This diagram is a logical ER model derived from the current backend Mongoose schemas in `/Users/kamil/Desktop/Meomul/meomul/apps/meomul-api/src/schemas`.
+This diagram is a logical ER model derived from the current backend Mongoose schemas in `meomul/apps/meomul-api/src/schemas`.
 
 ```mermaid
 erDiagram
