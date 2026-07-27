@@ -272,7 +272,12 @@ HotelSchema.index(
 	},
 	{
 		unique: true,
-		partialFilterExpression: { hotelStatus: { $ne: 'DELETE' } },
+		// MongoDB rejects $ne inside partialFilterExpression ("Expression not supported in
+		// partial index: $not"), so this index silently never existed. Enumerate the kept
+		// statuses with $in instead — same intent, actually creatable.
+		partialFilterExpression: {
+			hotelStatus: { $in: Object.values(HotelStatus).filter((status) => status !== HotelStatus.DELETE) },
+		},
 	},
 );
 

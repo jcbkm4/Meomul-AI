@@ -21,7 +21,11 @@ import { attachMongoSlowQueryMonitor } from './mongo-monitor';
 				maxPoolSize: process.env.NODE_ENV === 'production' ? 50 : 10,
 				minPoolSize: process.env.NODE_ENV === 'production' ? 5 : 1,
 				monitorCommands: process.env.MONGO_SLOW_QUERY_LOG === 'true',
-				// Disable auto-index creation in production (indexes should be managed via migrations)
+				// No auto-index creation in production — building indexes from every API
+				// instance on boot is wasteful and unpredictable under rollout. The batch
+				// worker owns index management instead: it runs the reconciliation once at
+				// boot when RUN_INDEX_SYNC=true (apps/meomul-batch/src/common/index-sync.ts),
+				// and `npm run indexes:sync -- --dry-run` reports drift.
 				autoIndex: process.env.NODE_ENV !== 'production',
 			}),
 		}),

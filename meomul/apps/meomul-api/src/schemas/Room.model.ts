@@ -120,9 +120,13 @@ RoomSchema.index(
 	},
 	{
 		unique: true,
+		// MongoDB rejects $ne inside partialFilterExpression ("Expression not supported in
+		// partial index: $not"), so this uniqueness constraint silently never existed and
+		// duplicate room numbers were possible. $type excludes both missing and null
+		// roomNumbers; $in enumerates the statuses that should be constrained.
 		partialFilterExpression: {
-			roomNumber: { $exists: true, $ne: null },
-			roomStatus: { $ne: 'INACTIVE' },
+			roomNumber: { $type: 'string' },
+			roomStatus: { $in: Object.values(RoomStatus).filter((status) => status !== RoomStatus.INACTIVE) },
 		},
 	},
 );

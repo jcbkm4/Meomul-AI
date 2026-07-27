@@ -66,6 +66,9 @@ services:
       NODE_ENV: production
       PORT_BATCH: 3003
       REDIS_URL: redis://redis:6379
+      # Production runs with autoIndex disabled, so the batch worker builds the
+      # MongoDB indexes at boot. Idempotent and additive — it never drops an index.
+      RUN_INDEX_SYNC: ${RUN_INDEX_SYNC:-true}
     depends_on:
       - redis
 

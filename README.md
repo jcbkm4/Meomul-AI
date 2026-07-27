@@ -73,6 +73,25 @@ Note that `NEXT_PUBLIC_*` variables are inlined into the frontend bundle at **bu
 time, so they are passed as Docker build args — changing them requires a rebuild, not
 just a restart.
 
+## Database indexes
+
+Production runs with `autoIndex: false`, so Mongoose does not build indexes on boot.
+The batch worker owns this instead — it reconciles all 20 models (~102 indexes) at
+startup when `RUN_INDEX_SYNC=true`, which is the default in the production Compose file.
+It is idempotent and additive; it never drops an index.
+
+To inspect or run it by hand:
+
+```bash
+cd meomul
+npm run indexes:sync -- --dry-run   # report drift, change nothing
+npm run indexes:sync                # create missing indexes
+npm run indexes:sync -- --prune     # also drop indexes no longer in any schema
+```
+
+`--prune` is deliberately opt-in: dropping an index a still-running container depends on
+degrades queries mid-deploy. Run it after a rollout settles, not during one.
+
 ## Deployment
 
 Production runs as a Docker Compose stack behind Caddy (automatic TLS):
@@ -90,8 +109,6 @@ production-readiness plan before deploying.
 
 Do not treat `main` as production-ready yet. The tracked blockers:
 
-- MongoDB indexes are not created in production (`autoIndex` is off and no migration
-  tooling exists)
 - `resetPassword` verifies only nickname + phone — no token, no OTP
 - No error tracking or metrics in either app
 - Test coverage is ~2.6%; `booking.service.ts` is untested
