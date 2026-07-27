@@ -1,0 +1,2338 @@
+.page {
+  --home-bg: #f3f7fb;
+  --home-surface: #ffffff;
+  --home-surface-muted: #f8fafc;
+  --home-border: #e2e8f0;
+  --home-border-strong: #cbd5e1;
+  --home-text: #0f172a;
+  --home-text-muted: #475569;
+  --home-text-subtle: #64748b;
+  --home-accent: #0f172a;
+  --home-accent-hover: #1e293b;
+  --home-accent-soft: #e2e8f0;
+  --home-ink: #0f172a;
+  --home-ink-hover: #1e293b;
+  --home-radius-xl: 1.5rem;
+  --home-radius-lg: 1rem;
+  --home-radius-md: 0.75rem;
+  --home-shadow-soft: 0 12px 26px -20px rgba(15, 23, 42, 0.28);
+  --home-shadow-card: 0 18px 40px -32px rgba(15, 23, 42, 0.45);
+  min-height: 100vh;
+  background: radial-gradient(circle at top right, #d9f5ef 0%, transparent 45%),
+    radial-gradient(circle at bottom left, #e2ebff 0%, transparent 40%), var(--home-bg);
+  color: var(--home-text);
+  font-family: var(--font-manrope), sans-serif;
+  overflow-x: clip;
+}
+
+.shell {
+  width: 100%;
+  padding: 0.95rem 0.95rem 1.35rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.2rem;
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-radius-xl);
+  min-height: 4.75rem;
+  padding: 0 1.6rem;
+  box-shadow: var(--home-shadow-card);
+  animation: navEnter 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+}
+
+.logoMark {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 0.2rem;
+  align-items: end;
+}
+
+.logoMark span {
+  width: 0.36rem;
+  border-radius: 0.12rem;
+  background: var(--home-accent);
+}
+
+.logoMark span:nth-child(1) {
+  height: 0.95rem;
+}
+
+.logoMark span:nth-child(2) {
+  height: 1.22rem;
+}
+
+.logoMark span:nth-child(3) {
+  height: 1.52rem;
+}
+
+.logoText {
+  color: var(--home-text);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.navLinks {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  text-decoration: none;
+  color: var(--home-text);
+  font-size: 1.03rem;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 0.5rem 0.86rem;
+  transition: color 220ms ease, background-color 220ms ease, transform 220ms ease;
+}
+
+.navLink span {
+  font-size: 0.74rem;
+  transform: translateY(-0.02rem);
+}
+
+.navLink:hover {
+  background: var(--home-surface-muted);
+  color: var(--home-text);
+  transform: translateY(-1px);
+}
+
+.navCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.44rem;
+}
+
+.startButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--home-ink);
+  background: var(--home-ink);
+  color: #ffffff;
+  padding: 0 1.42rem;
+  font-size: 1.06rem;
+  font-weight: 600;
+  transition: transform 220ms ease, background-color 220ms ease, color 220ms ease;
+}
+
+.arrowButton {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border-radius: 999px;
+  border: 1px solid var(--home-ink);
+  background: var(--home-ink);
+  color: #ffffff;
+  font-size: 1.24rem;
+  transition: transform 220ms ease, background-color 220ms ease, color 220ms ease;
+}
+
+.startButton:hover,
+.arrowButton:hover {
+  background: var(--home-ink-hover);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.hero {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: 0.82fr 1fr;
+  gap: 1.4rem;
+  flex: 1;
+  min-height: 0;
+  height: min(43rem, calc(100vh - 8.2rem));
+}
+
+.heroLeft {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-radius-xl);
+  padding: clamp(2.25rem, 4vh, 3.55rem) clamp(2.35rem, 3.1vw, 3.5rem) clamp(1.65rem, 2.6vh, 2.25rem);
+  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: panelEnterLeft 840ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.72rem;
+  color: var(--home-text);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  animation: revealUp 820ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
+}
+
+.subtitleSlash {
+  width: 0.35rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--home-accent);
+  transform: rotate(-20deg);
+}
+
+.title {
+  margin: 1.15rem 0 0;
+  font-size: clamp(3.2rem, 6.4vw, 6.3rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  max-width: 10.1ch;
+  font-weight: 650;
+  animation: revealUp 820ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
+}
+
+.primaryRow {
+  margin-top: 1.95rem;
+  display: flex;
+  align-items: center;
+  gap: 1.35rem;
+  flex-wrap: wrap;
+  animation: revealUp 820ms cubic-bezier(0.22, 1, 0.36, 1) 270ms both;
+}
+
+.serviceButton {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 999px;
+  background: var(--home-accent);
+  border: 1px solid var(--home-accent);
+  color: #ffffff;
+  padding: 0.15rem 0.16rem 0.15rem 1.25rem;
+  min-height: 2.95rem;
+  font-size: 1.56rem;
+  font-weight: 600;
+  gap: 0.55rem;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.serviceButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--home-shadow-soft);
+}
+
+.serviceButtonArrow {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--home-accent-hover);
+  background: var(--home-accent);
+  font-size: 1.34rem;
+  transition: transform 220ms ease, background-color 220ms ease;
+}
+
+.serviceButton:hover .serviceButtonArrow {
+  transform: rotate(35deg);
+  background: var(--home-accent-hover);
+}
+
+.reviewWrap {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.reviewLabel {
+  color: #0f172a;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.reviewBottom {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.avatarStack {
+  display: flex;
+}
+
+.avatarItem {
+  position: relative;
+  width: 1.62rem;
+  height: 1.62rem;
+  border-radius: 999px;
+  border: 2px solid var(--home-surface);
+  margin-left: -0.32rem;
+  overflow: hidden;
+  background: #cbd5e1;
+  transition: transform 180ms ease;
+}
+
+.avatarItem:first-child {
+  margin-left: 0;
+}
+
+.avatarItem:hover {
+  transform: translateY(-1px);
+}
+
+.avatarImage {
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.63rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.reviewMeta {
+  display: grid;
+  gap: 0.02rem;
+  color: #334155;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.stars {
+  color: #3b82f6;
+  font-size: 1.06rem;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 2px rgba(59, 130, 246, 0.16);
+}
+
+.bottomRow {
+  margin-top: auto;
+  padding-top: 2.1rem;
+  border-top: 1px solid var(--home-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.1rem;
+  animation: revealUp 820ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+}
+
+.description {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--home-text-muted);
+  font-size: 1.02rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.watchBubble {
+  width: 5.8rem;
+  height: 5.8rem;
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  border: 1px solid var(--home-border);
+  flex-shrink: 0;
+  transition: transform 240ms ease;
+}
+
+.watchBubble:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.watchImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.78) saturate(0.94);
+}
+
+.watchFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, #94a3b8 0%, #dbeafe 100%);
+}
+
+.watchOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.38);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.46) 100%);
+}
+
+.heroRight {
+  position: relative;
+  min-height: 100%;
+  height: 100%;
+  border-radius: var(--home-radius-xl);
+  overflow: hidden;
+  background: #cbd5e1;
+  animation: panelEnterRight 880ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sliderViewport {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.05);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.slideActive {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.slideImage {
+  object-fit: cover;
+  animation: heroImageIn 600ms ease both;
+}
+
+.slideFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, #94a3b8 0%, #dbeafe 100%);
+}
+
+.slideShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 28%, rgba(0, 0, 0, 0.62) 100%);
+}
+
+.slideMeta {
+  position: absolute;
+  left: 1.2rem;
+  right: 1.2rem;
+  bottom: 2.6rem;
+  color: #ffffff;
+  z-index: 2;
+}
+
+.slideTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+}
+
+.slideTags span {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(15, 23, 42, 0.28);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  padding: 0.22rem 0.52rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+.slideMeta h3 {
+  margin: 0.5rem 0 0;
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.32);
+}
+
+.slideMeta p {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+
+.dots {
+  position: absolute;
+  left: 50%;
+  bottom: 1.35rem;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+}
+
+.dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition: width 220ms ease, background-color 220ms ease, transform 220ms ease;
+  padding: 0;
+}
+
+.dot:hover {
+  transform: translateY(-1px);
+}
+
+.dotActive {
+  width: 1.56rem;
+  background: #ffffff;
+}
+
+.signatureSection {
+  margin-top: 1.6rem;
+  padding: 0.9rem 0 1.4rem;
+}
+
+.signatureHeader {
+  text-align: center;
+  max-width: 64rem;
+  margin: 0 auto 1.35rem;
+  animation: revealUp 820ms cubic-bezier(0.22, 1, 0.36, 1) 430ms both;
+}
+
+.signatureEyebrow {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.signatureTitle {
+  margin: 0.45rem 0 0;
+  color: var(--home-text);
+  font-size: clamp(2.2rem, 4.8vw, 4.2rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+
+.signatureDescription {
+  margin: 0.78rem auto 0;
+  max-width: 42rem;
+  color: var(--home-text-muted);
+  font-size: 1.04rem;
+  line-height: 1.54;
+  font-weight: 500;
+}
+
+.signatureDebugBox {
+  margin: 0.9rem auto 0;
+  max-width: 42rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.42rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: #52607a;
+}
+
+.signatureDebugBox span {
+  padding: 0.36rem 0.52rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.signatureRows {
+  display: grid;
+  gap: 1rem;
+}
+
+.signatureRow {
+  display: flex;
+  gap: 1rem;
+  min-height: 22.6rem;
+}
+
+.signatureCard {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: var(--home-radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  background: #111827;
+  transition: flex 420ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms ease, box-shadow 260ms ease;
+  animation: revealUp 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.signatureCard:nth-child(1) {
+  animation-delay: 470ms;
+}
+
+.signatureCard:nth-child(2) {
+  animation-delay: 540ms;
+}
+
+.signatureCard:nth-child(3) {
+  animation-delay: 610ms;
+}
+
+.signatureCardActive {
+  flex: 1.42 1 0;
+  transform: translateY(-2px);
+  box-shadow: var(--home-shadow-card);
+}
+
+.signatureCardLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.signatureCardImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.86) saturate(0.96);
+  transition: transform 440ms cubic-bezier(0.22, 1, 0.36, 1), filter 320ms ease;
+}
+
+.signatureCardFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, #94a3b8 0%, #dbeafe 100%);
+}
+
+.signatureCardShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.14) 18%, rgba(0, 0, 0, 0.72) 100%);
+  transition: background 300ms ease;
+}
+
+.signatureCardContent {
+  position: absolute;
+  inset: auto 1.05rem 1.08rem;
+  color: #f8fafc;
+  display: grid;
+  gap: 0.34rem;
+  z-index: 2;
+}
+
+.signatureCardIndex {
+  margin: 0;
+  font-size: 2.34rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.signatureCardContent h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.64rem, 2vw, 2.28rem);
+  line-height: 1.02;
+  letter-spacing: -0.016em;
+}
+
+.signatureCardMeta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.signatureCardSignal {
+  margin: 0.24rem 0 0;
+  color: rgba(255, 255, 255, 0.98);
+  font-size: 1.02rem;
+  line-height: 1.42;
+  max-width: 32rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 220ms ease, transform 260ms ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.signatureCardCta {
+  margin-top: 0.36rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid var(--home-accent);
+  background: var(--home-accent);
+  color: #ffffff;
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 0.58rem 1.04rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 220ms ease, transform 260ms ease;
+}
+
+.signatureCardCta span {
+  font-size: 1.02rem;
+}
+
+.signatureCard:is(:hover, :focus-within) {
+  transform: translateY(-2px);
+  box-shadow: var(--home-shadow-card);
+}
+
+.signatureCard:is(:hover, :focus-within) .signatureCardImage,
+.signatureCardActive .signatureCardImage {
+  transform: scale(1.045);
+}
+
+.signatureCard:is(:hover, :focus-within) .signatureCardShade,
+.signatureCardActive .signatureCardShade {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.26) 18%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.signatureCard:is(:hover, :focus-within) .signatureCardSignal,
+.signatureCardActive .signatureCardSignal,
+.signatureCard:is(:hover, :focus-within) .signatureCardCta,
+.signatureCardActive .signatureCardCta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.trendingSection {
+  margin-top: 0.8rem;
+  padding: 0.9rem 0 1.05rem;
+}
+
+.trendingHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin-bottom: 0.92rem;
+}
+
+.trendingEyebrow {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.trendingTitle {
+  margin: 0.36rem 0 0;
+  color: var(--home-text);
+  font-size: clamp(1.72rem, 3.4vw, 2.4rem);
+  line-height: 1;
+  letter-spacing: -0.022em;
+}
+
+.trendingLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  text-decoration: none;
+  border-radius: 999px;
+  border: 1px solid var(--home-border);
+  background: var(--home-surface);
+  color: var(--home-text);
+  min-height: 2.3rem;
+  padding: 0 0.88rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.trendingLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--home-border-strong);
+  background: var(--home-surface-muted);
+}
+
+.trendingRail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(17rem, 20rem);
+  gap: 0.84rem;
+  overflow-x: auto;
+  padding-bottom: 0.22rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.trendingCard {
+  position: relative;
+  border-radius: var(--home-radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  min-height: 15rem;
+  background: #111827;
+  animation: revealUp 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.trendingCardLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.trendingCardImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.86) saturate(0.96);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
+}
+
+.trendingCardFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(138deg, #94a3b8 0%, #dbeafe 100%);
+}
+
+.trendingCardShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.14) 18%, rgba(0, 0, 0, 0.7) 100%);
+  transition: background 280ms ease;
+}
+
+.trendingCardContent {
+  position: absolute;
+  inset: auto 0.86rem 0.92rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.24rem;
+  color: #f8fafc;
+}
+
+.trendingRank {
+  margin: 0;
+  font-size: 1.34rem;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+.trendingCardContent h3 {
+  margin: 0;
+  font-size: 1.42rem;
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  color: #ffffff;
+}
+
+.trendingMeta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.trendingStats {
+  margin-top: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.62rem;
+  color: rgba(255, 255, 255, 0.98);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.trendingCard:is(:hover, :focus-within) .trendingCardImage {
+  transform: scale(1.05);
+}
+
+.trendingCard:is(:hover, :focus-within) .trendingCardShade {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.24) 18%, rgba(0, 0, 0, 0.88) 100%);
+}
+
+.dealsSection {
+  margin-top: 0.96rem;
+  padding: 0.94rem 0 1rem;
+}
+
+.dealsHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin-bottom: 0.86rem;
+}
+
+.dealsEyebrow {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.dealsTitle {
+  margin: 0.36rem 0 0;
+  color: var(--home-text);
+  font-size: clamp(1.68rem, 3.2vw, 2.24rem);
+  line-height: 1.02;
+  letter-spacing: -0.022em;
+}
+
+.dealsLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  text-decoration: none;
+  border-radius: 999px;
+  border: 1px solid var(--home-border);
+  background: var(--home-surface);
+  color: var(--home-text);
+  min-height: 2.3rem;
+  padding: 0 0.88rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.dealsLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--home-border-strong);
+  background: var(--home-surface-muted);
+}
+
+.dealsRail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(18rem, 21rem);
+  gap: 0.86rem;
+  overflow-x: auto;
+  padding-bottom: 0.24rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dealCard {
+  position: relative;
+  border-radius: var(--home-radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  min-height: 15.6rem;
+  background: #111827;
+  animation: revealUp 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dealCardLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.dealCardImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.86) saturate(0.96);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dealCardFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(138deg, #94a3b8 0%, #dbeafe 100%);
+}
+
+.dealCardShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.14) 18%, rgba(0, 0, 0, 0.72) 100%);
+  transition: background 280ms ease;
+}
+
+.dealBadge {
+  position: absolute;
+  inset: 0.86rem auto auto 0.86rem;
+  z-index: 2;
+  border-radius: 999px;
+  padding: 0.3rem 0.64rem;
+  border: 1px solid rgba(254, 202, 202, 0.9);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.96), rgba(220, 38, 38, 0.92));
+  color: #fff7f7;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 10px 20px -12px rgba(239, 68, 68, 0.9);
+}
+
+.dealCardContent {
+  position: absolute;
+  inset: auto 0.88rem 0.92rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.18rem;
+  color: #f8fafc;
+}
+
+.dealHotelMeta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.dealCardContent h3 {
+  margin: 0;
+  font-size: 1.34rem;
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  color: #ffffff;
+}
+
+.dealRoomMeta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.98);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.dealPriceRow {
+  margin-top: 0.18rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.46rem;
+}
+
+.dealPrice {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(254, 202, 202, 0.9);
+  color: #ffffff;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding: 0.32rem 0.62rem;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.16);
+}
+
+.dealOriginalPrice {
+  color: rgba(241, 245, 249, 0.96);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.6px;
+  text-decoration-color: rgba(241, 245, 249, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+.dealExpiry {
+  margin: 0.08rem 0 0;
+  color: #dbeafe;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.dealCard:is(:hover, :focus-within) .dealCardImage {
+  transform: scale(1.05);
+}
+
+.dealCard:is(:hover, :focus-within) .dealCardShade {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.26) 18%, rgba(0, 0, 0, 0.88) 100%);
+}
+
+.guidesSection {
+  margin-top: 0.94rem;
+  padding: 0.92rem 0 0.98rem;
+}
+
+.guidesHeader {
+  margin-bottom: 0.88rem;
+  display: grid;
+  gap: 0.34rem;
+  text-align: center;
+}
+
+.guidesEyebrow {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.guidesTitle {
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(1.68rem, 3.2vw, 2.18rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+}
+
+.guidesDescription {
+  margin: 0 auto;
+  max-width: 52rem;
+  color: var(--home-text-muted);
+  font-size: 0.98rem;
+  line-height: 1.48;
+}
+
+.guidesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.72rem;
+}
+
+.guideCard {
+  position: relative;
+  border-radius: var(--home-radius-lg);
+  border: 1px solid var(--home-border);
+  overflow: hidden;
+  min-height: 15.2rem;
+  background: #111827;
+  box-shadow: 0 12px 30px -24px rgba(15, 23, 42, 0.72);
+  animation: revealUp 780ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.guideCard:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.guideCard:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.guideCard:nth-child(4) {
+  animation-delay: 210ms;
+}
+
+.guideCardLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.guideCardImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.89) saturate(0.97);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.guideCardFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #9ca3af 0%, #dbeafe 100%);
+}
+
+.guideCardShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.12) 16%, rgba(2, 6, 23, 0.66) 100%);
+  transition: background 240ms ease;
+}
+
+.guideCardContent {
+  position: absolute;
+  inset: auto 0.84rem 0.84rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.24rem;
+  color: #f8fafc;
+}
+
+.guideCardEyebrow {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.guideCardContent h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.guideCardDescription {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.42;
+  color: rgba(255, 255, 255, 0.94);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.guideCardMeta {
+  margin: 0.02rem 0 0;
+  font-size: 0.69rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(219, 234, 254, 0.98);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.guideCardCta {
+  margin-top: 0.18rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.4);
+  background: rgba(2, 6, 23, 0.68);
+  color: #f8fafc;
+  padding: 0.3rem 0.54rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.guideCard:is(:hover, :focus-within) .guideCardImage {
+  transform: scale(1.06);
+}
+
+.guideCard:is(:hover, :focus-within) .guideCardShade {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.28) 16%, rgba(2, 6, 23, 0.94) 100%);
+}
+
+.valueSection {
+  margin-top: 0.64rem;
+  margin-bottom: 0.9rem;
+  padding: 1rem 0 0.8rem;
+}
+
+.valueHeader {
+  display: grid;
+  gap: 0.36rem;
+  margin-bottom: 0.86rem;
+}
+
+.valueEyebrow {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.valueTitle {
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(1.72rem, 3.1vw, 2.36rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.valueGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.72rem;
+}
+
+.valueCard {
+  border-radius: var(--home-radius-lg);
+  border: 1px solid var(--home-border);
+  background: var(--home-surface);
+  min-height: 10.6rem;
+  padding: 0.96rem 0.92rem 0.9rem;
+  display: grid;
+  gap: 0.52rem;
+  align-content: start;
+  animation: revealUp 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: 0 10px 24px -24px rgba(15, 23, 42, 0.42);
+}
+
+.valueCardTitle {
+  margin: 0;
+  color: var(--home-text-subtle);
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.valueCardMetric {
+  margin: 0;
+  color: var(--home-text);
+  font-size: 1.42rem;
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+  font-weight: 700;
+}
+
+.valueCardDetail {
+  margin: 0;
+  color: var(--home-text-muted);
+  font-size: 0.91rem;
+  line-height: 1.42;
+  font-weight: 500;
+}
+
+.testimonialsSection {
+  margin-top: 1.6rem;
+  margin-bottom: 1.3rem;
+  padding: 1.5rem 0 1rem;
+}
+
+.testimonialsHeader {
+  text-align: center;
+  max-width: 64rem;
+  margin: 0 auto 1.4rem;
+  display: grid;
+  gap: 0.74rem;
+}
+
+.testimonialsTopRow {
+  display: block;
+}
+
+.testimonialsEyebrow {
+  margin: 0;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--home-text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.testimonialsSlash {
+  width: 0.28rem;
+  height: 1.24rem;
+  border-radius: 999px;
+  background: #60a5fa;
+  transform: rotate(-20deg);
+}
+
+.testimonialsTitle {
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(2.2rem, 4.8vw, 4.2rem);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+
+.testimonialsDescription {
+  margin: 0.78rem auto 0;
+  max-width: 42rem;
+  color: var(--home-text-muted);
+  font-size: 1.04rem;
+  line-height: 1.54;
+  font-weight: 500;
+}
+
+.testimonialsViewport {
+  position: relative;
+  overflow: hidden;
+  padding: 0.24rem 0.06rem 0.2rem;
+}
+
+.testimonialsTrack {
+  --testimonial-card-width: minmax(21.5rem, 25.4rem);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--testimonial-card-width);
+  gap: 1.08rem;
+  width: max-content;
+  animation: testimonialMarquee 48s linear infinite;
+  will-change: transform;
+}
+
+.testimonialsTrackStatic {
+  animation: none;
+  transform: translateX(0);
+}
+
+.testimonialsViewport:hover .testimonialsTrack,
+.testimonialsViewport:focus-within .testimonialsTrack {
+  animation-play-state: paused;
+}
+
+.testimonialCard {
+  border-radius: var(--home-radius-xl);
+  border: 1px solid var(--home-border);
+  background: var(--home-surface);
+  min-height: 29rem;
+  padding: 1.34rem 1.3rem 1.18rem;
+  display: grid;
+  align-content: start;
+  gap: 1.15rem;
+  scroll-snap-align: start;
+  transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
+  animation: revealUp 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.testimonialCardActive {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: var(--home-shadow-card);
+}
+
+.testimonialCardAccent {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #111827;
+}
+
+.testimonialCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.testimonialAvatar {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--home-border);
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.testimonialAvatarImage {
+  object-fit: cover;
+}
+
+.testimonialAvatarFallback {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--home-text);
+}
+
+.testimonialReviewer {
+  min-width: 0;
+}
+
+.testimonialReviewer h3 {
+  margin: 0;
+  font-size: 1.075rem;
+  font-weight: 650;
+  color: var(--home-text);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.testimonialReviewer p {
+  margin: 0.18rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--home-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.testimonialCardActive .testimonialAvatar {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.testimonialCardActive .testimonialReviewer h3 {
+  color: #ffffff;
+}
+
+.testimonialCardActive .testimonialReviewer p {
+  color: rgba(241, 245, 249, 0.8);
+}
+
+.testimonialCardActive .testimonialAvatarFallback {
+  color: #ffffff;
+}
+
+.testimonialCardAccent .testimonialReviewer h3,
+.testimonialCardAccent .testimonialReviewer p,
+.testimonialCardAccent .testimonialAvatarFallback {
+  color: #111827;
+}
+
+.testimonialDivider {
+  height: 1px;
+  background: var(--home-border);
+}
+
+.testimonialCardActive .testimonialDivider {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.testimonialCardAccent .testimonialDivider {
+  background: rgba(37, 99, 235, 0.22);
+}
+
+.testimonialStars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.testimonialStarFilled {
+  color: #f59e0b;
+}
+
+.testimonialStarEmpty {
+  color: #cbd5e1;
+}
+
+.testimonialCardActive .testimonialStarEmpty {
+  color: rgba(241, 245, 249, 0.42);
+}
+
+.testimonialQuote {
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(1.04rem, 1.225vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.34;
+  letter-spacing: -0.015em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+}
+
+.testimonialCardActive .testimonialQuote {
+  color: #f8fafc;
+}
+
+.testimonialCardAccent .testimonialQuote {
+  color: #111827;
+}
+
+.testimonialCardAccent .testimonialStarFilled {
+  color: #1d4ed8;
+}
+
+.testimonialCardAccent .testimonialStarEmpty {
+  color: rgba(29, 78, 216, 0.28);
+}
+
+@keyframes navEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes panelEnterLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-28px, 0, 0);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes panelEnterRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes revealUp {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes heroImageIn {
+  0% {
+    transform: scale(1.3);
+    filter: blur(5px);
+  }
+  100% {
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes testimonialMarquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(calc(-50% - 0.54rem), 0, 0);
+  }
+}
+
+@media (max-width: 1400px) {
+  .logoText {
+    font-size: 1.82rem;
+  }
+
+  .title {
+    font-size: clamp(3.4rem, 7vw, 6.4rem);
+  }
+
+  .serviceButton {
+    font-size: 1.52rem;
+  }
+}
+
+@media (max-width: 1180px) {
+  .shell {
+    width: calc(100vw - 1.8rem);
+  }
+
+  .navbar {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    padding: 0.8rem 1rem;
+    min-height: auto;
+    gap: 0.75rem;
+  }
+
+  .navLinks {
+    overflow-x: auto;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    height: auto;
+    flex: initial;
+  }
+
+  .heroLeft,
+  .heroRight {
+    min-height: auto;
+  }
+
+  .heroLeft {
+    padding: 2.1rem 1.35rem 1.4rem;
+  }
+
+  .title {
+    font-size: clamp(3rem, 12vw, 4.8rem);
+  }
+
+  .description {
+    font-size: 1.02rem;
+  }
+
+  .heroRight {
+    min-height: 28rem;
+  }
+
+  .signatureSection {
+    margin-top: 1.18rem;
+    padding-bottom: 1rem;
+  }
+
+  .signatureHeader {
+    text-align: left;
+    margin-bottom: 0.95rem;
+  }
+
+  .signatureDescription {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .signatureDebugBox {
+    justify-content: flex-start;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .signatureRows {
+    gap: 0.86rem;
+  }
+
+  .signatureRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: auto;
+  }
+
+  .signatureCard,
+  .signatureCardActive {
+    flex: initial;
+    min-height: 16.8rem;
+    transform: none;
+  }
+
+  .signatureCardSignal,
+  .signatureCardCta {
+    opacity: 1;
+    transform: none;
+  }
+
+  .signatureCardContent h3 {
+    font-size: clamp(1.42rem, 3.5vw, 1.94rem);
+  }
+
+  .trendingSection {
+    margin-top: 0.6rem;
+    padding-bottom: 0.8rem;
+  }
+
+  .trendingHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 0.76rem;
+  }
+
+  .trendingTitle {
+    font-size: clamp(1.46rem, 5vw, 1.92rem);
+  }
+
+  .trendingRail {
+    grid-auto-columns: minmax(15.2rem, 17.6rem);
+  }
+
+  .trendingCard {
+    min-height: 13.6rem;
+  }
+
+  .trendingCardContent h3 {
+    font-size: 1.24rem;
+  }
+
+  .dealsSection {
+    margin-top: 0.64rem;
+    padding-bottom: 0.8rem;
+  }
+
+  .dealsHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 0.76rem;
+  }
+
+  .dealsTitle {
+    font-size: clamp(1.46rem, 5vw, 1.92rem);
+  }
+
+  .dealsRail {
+    grid-auto-columns: minmax(15.2rem, 17.6rem);
+  }
+
+  .dealCard {
+    min-height: 13.8rem;
+  }
+
+  .dealCardContent h3 {
+    font-size: 1.2rem;
+  }
+
+  .guidesSection {
+    margin-top: 0.68rem;
+    padding-bottom: 0.82rem;
+  }
+
+  .guidesHeader {
+    margin-bottom: 0.72rem;
+    text-align: left;
+  }
+
+  .guidesTitle {
+    font-size: clamp(1.44rem, 5vw, 1.9rem);
+  }
+
+  .guidesDescription {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+
+  .guidesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.64rem;
+  }
+
+  .guideCard {
+    min-height: 14.2rem;
+  }
+
+  .guideCardContent h3 {
+    font-size: 1.1rem;
+  }
+
+  .valueSection {
+    margin-top: 0.48rem;
+    margin-bottom: 0.56rem;
+  }
+
+  .valueGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.64rem;
+  }
+
+  .valueCard {
+    min-height: 10.1rem;
+  }
+
+  .testimonialsSection {
+    margin-top: 0.74rem;
+    margin-bottom: 0.86rem;
+    padding-top: 0.78rem;
+  }
+
+  .testimonialsHeader {
+    text-align: left;
+    margin-bottom: 0.88rem;
+  }
+
+  .testimonialsTopRow {
+    display: block;
+  }
+
+  .testimonialsEyebrow {
+    justify-content: flex-start;
+  }
+
+  .testimonialsTitle {
+    font-size: clamp(2.2rem, 4.8vw, 4.2rem);
+  }
+
+  .testimonialsDescription {
+    margin-left: 0;
+    margin-right: 0;
+    font-size: 1.04rem;
+  }
+
+  .testimonialsTrack {
+    --testimonial-card-width: minmax(19rem, 22rem);
+    animation-duration: 52s;
+  }
+
+  .testimonialCard {
+    min-height: 24rem;
+  }
+
+  .testimonialReviewer h3 {
+    font-size: 0.75rem;
+  }
+
+  .testimonialReviewer p {
+    font-size: 0.66rem;
+  }
+
+  .testimonialQuote {
+    font-size: clamp(0.725rem, 1.4vw, 1rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.45rem 0.4rem 0.9rem;
+  }
+
+  .navbar {
+    border-radius: 1rem;
+    padding: 0.68rem 0.8rem;
+    gap: 0.55rem;
+  }
+
+  .logoText {
+    font-size: 1.34rem;
+  }
+
+  .navLink {
+    font-size: 0.82rem;
+    padding: 0.28rem 0.54rem;
+  }
+
+  .startButton {
+    min-height: 2.26rem;
+    font-size: 0.9rem;
+    padding: 0 1rem;
+  }
+
+  .arrowButton {
+    width: 2.26rem;
+    height: 2.26rem;
+    font-size: 1.04rem;
+  }
+
+  .hero {
+    margin-top: 0.45rem;
+    gap: 0.72rem;
+  }
+
+  .heroLeft {
+    order: 2;
+    border-radius: 0.92rem;
+    padding: 0.9rem 0.88rem 0.76rem;
+  }
+
+  .heroRight {
+    order: 1;
+    border-radius: 0.92rem;
+    min-height: 14.6rem;
+  }
+
+  .title {
+    max-width: 100%;
+    font-size: clamp(1.88rem, 8.4vw, 2.44rem);
+    line-height: 0.94;
+    margin-top: 0.5rem;
+  }
+
+  .primaryRow {
+    margin-top: 0.72rem;
+    gap: 0.48rem;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .serviceButton {
+    font-size: 0.94rem;
+    min-height: 2.22rem;
+    padding-left: 0.78rem;
+    padding-right: 0.12rem;
+    gap: 0.38rem;
+    width: fit-content;
+  }
+
+  .serviceButtonArrow {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.88rem;
+  }
+
+  .reviewWrap {
+    gap: 0.28rem;
+    width: 100%;
+  }
+
+  .reviewLabel {
+    font-size: 0.82rem;
+    letter-spacing: -0.01em;
+  }
+
+  .reviewMeta {
+    font-size: 0.73rem;
+    line-height: 1.2;
+  }
+
+  .avatarItem {
+    width: 1.36rem;
+    height: 1.36rem;
+    margin-left: -0.24rem;
+  }
+
+  .stars {
+    font-size: 0.84rem;
+  }
+
+  .bottomRow {
+    padding-top: 0.68rem;
+    align-items: flex-start;
+    gap: 0.78rem;
+  }
+
+  .description {
+    max-width: none;
+    font-size: 0.86rem;
+    line-height: 1.42;
+  }
+
+  .watchBubble {
+    display: none;
+  }
+
+  .watchOverlay {
+    font-size: 0.86rem;
+    gap: 0.2rem;
+  }
+
+  .slideTags span:nth-child(n + 2) {
+    display: none;
+  }
+
+  .slideTags span {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    padding: 0.18rem 0.42rem;
+  }
+
+  .slideMeta {
+    left: 0.82rem;
+    right: 0.82rem;
+    bottom: 1.3rem;
+  }
+
+  .slideMeta h3 {
+    margin-top: 0.38rem;
+    font-size: 1.12rem;
+  }
+
+  .slideMeta p {
+    margin-top: 0.18rem;
+    font-size: 0.68rem;
+  }
+
+  .dot {
+    width: 0.42rem;
+    height: 0.42rem;
+  }
+
+  .dotActive {
+    width: 0.88rem;
+  }
+
+  .signatureSection {
+    margin-top: 0.68rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .signatureTitle {
+    font-size: clamp(1.72rem, 10.5vw, 2.34rem);
+  }
+
+  .signatureDescription {
+    font-size: 0.86rem;
+  }
+
+  .signatureDebugBox {
+    gap: 0.34rem;
+    font-size: 0.66rem;
+  }
+
+  .signatureDebugBox span {
+    padding: 0.3rem 0.44rem;
+  }
+
+  .signatureRows {
+    gap: 0.56rem;
+  }
+
+  .signatureRow {
+    grid-template-columns: 1fr;
+    gap: 0.56rem;
+  }
+
+  .signatureCard,
+  .signatureCardActive {
+    min-height: 11.9rem;
+  }
+
+  .signatureCardContent {
+    inset: auto 0.82rem 0.82rem;
+    gap: 0.18rem;
+  }
+
+  .signatureCardIndex {
+    font-size: 1.34rem;
+  }
+
+  .signatureCardContent h3 {
+    font-size: clamp(1.2rem, 6vw, 1.42rem);
+  }
+
+  .signatureCardMeta {
+    font-size: 0.72rem;
+  }
+
+  .signatureCardSignal {
+    margin-top: 0.04rem;
+    font-size: 0.76rem;
+    line-height: 1.28;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .signatureCardCta {
+    display: none;
+  }
+
+  .trendingSection {
+    margin-top: 0.44rem;
+    padding: 0.58rem 0 0.68rem;
+  }
+
+  .trendingTitle {
+    font-size: clamp(1.34rem, 8vw, 1.75rem);
+  }
+
+  .trendingLink {
+    min-height: 2.06rem;
+    padding: 0 0.74rem;
+    font-size: 0.82rem;
+  }
+
+  .trendingRail {
+    grid-auto-columns: minmax(13.6rem, 15.4rem);
+    gap: 0.62rem;
+  }
+
+  .trendingCard {
+    min-height: 12.4rem;
+    border-radius: 0.92rem;
+  }
+
+  .trendingRank {
+    font-size: 1.04rem;
+  }
+
+  .trendingCardContent h3 {
+    font-size: 1.08rem;
+  }
+
+  .trendingMeta {
+    font-size: 0.69rem;
+  }
+
+  .trendingStats {
+    font-size: 0.76rem;
+    gap: 0.48rem;
+  }
+
+  .dealsSection {
+    margin-top: 0.44rem;
+    padding: 0.58rem 0 0.68rem;
+  }
+
+  .dealsTitle {
+    font-size: clamp(1.34rem, 8vw, 1.75rem);
+  }
+
+  .dealsLink {
+    min-height: 2.06rem;
+    padding: 0 0.74rem;
+    font-size: 0.82rem;
+  }
+
+  .dealsRail {
+    grid-auto-columns: minmax(13.6rem, 15.4rem);
+    gap: 0.62rem;
+  }
+
+  .dealCard {
+    min-height: 12.6rem;
+    border-radius: 0.92rem;
+  }
+
+  .dealBadge {
+    inset: 0.7rem auto auto 0.7rem;
+    font-size: 0.6rem;
+  }
+
+  .dealCardContent {
+    inset: auto 0.74rem 0.78rem;
+  }
+
+  .dealCardContent h3 {
+    font-size: 1.04rem;
+  }
+
+  .dealHotelMeta,
+  .dealRoomMeta,
+  .dealOriginalPrice,
+  .dealExpiry {
+    font-size: 0.68rem;
+  }
+
+  .dealPrice {
+    font-size: 0.98rem;
+    padding: 0.28rem 0.52rem;
+  }
+
+  .guidesSection {
+    margin-top: 0.48rem;
+    padding: 0.62rem 0 0.72rem;
+  }
+
+  .guidesTitle {
+    font-size: clamp(1.34rem, 8.6vw, 1.78rem);
+  }
+
+  .guidesDescription {
+    font-size: 0.86rem;
+  }
+
+  .guidesGrid {
+    grid-template-columns: 1fr;
+    gap: 0.58rem;
+  }
+
+  .guideCard {
+    min-height: 12.8rem;
+    border-radius: 0.92rem;
+  }
+
+  .guideCardContent {
+    inset: auto 0.74rem 0.78rem;
+    gap: 0.2rem;
+  }
+
+  .guideCardContent h3 {
+    font-size: 1rem;
+  }
+
+  .guideCardDescription {
+    font-size: 0.74rem;
+  }
+
+  .guideCardMeta {
+    font-size: 0.64rem;
+  }
+
+  .guideCardCta {
+    font-size: 0.62rem;
+    padding: 0.26rem 0.5rem;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  .heroLeft,
+  .heroRight,
+  .subtitle,
+  .title,
+  .primaryRow,
+  .bottomRow,
+  .slide,
+  .slideImage,
+  .navLink,
+  .startButton,
+  .arrowButton,
+  .serviceButton,
+  .serviceButtonArrow,
+  .watchBubble,
+  .dot,
+  .avatarItem,
+  .signatureHeader,
+  .signatureCard,
+  .signatureCardImage,
+  .signatureCardShade,
+  .signatureCardSignal,
+  .signatureCardCta,
+  .trendingLink,
+  .trendingCard,
+  .trendingCardImage,
+  .trendingCardShade,
+  .valueCard,
+  .testimonialCard {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .testimonialsTrack {
+    animation: none !important;
+    transform: none !important;
+  }
+}

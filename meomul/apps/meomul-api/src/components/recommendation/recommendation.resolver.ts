@@ -1,0 +1,125 @@
+import { Args, Int, Query, Resolver } from '@nestjs/graphql';
+import { Logger } from '@nestjs/common';
+import { HotelDto } from '../../libs/dto/hotel/hotel';
+import { CurrentMember } from '../auth/decorators/current-member.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
+import type { MemberJwtPayload } from '../../libs/types/member';
+import { HotelLocation } from '../../libs/enums/hotel.enum';
+import { RecommendationProfileDto } from '../../libs/dto/preference/recommendation-profile.dto';
+import { RecommendedHotelsV2Dto } from '../../libs/dto/preference/recommended-hotels.dto';
+import { RecommendationService } from './recommendation.service';
+
+@Resolver()
+export class RecommendationResolver {
+	private readonly logger = new Logger(RecommendationResolver.name);
+
+	constructor(private readonly recommendationService: RecommendationService) {}
+
+	/**
+	 * Get current member recommendation profile/onboarding snapshot.
+	 */
+	@Query(() => RecommendationProfileDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getMyRecommendationProfile(
+		@CurrentMember() currentMember: MemberJwtPayload,
+	): Promise<RecommendationProfileDto> {
+		try {
+			this.logger.log('Query getMyRecommendationProfile', currentMember?._id ?? 'unknown');
+			return this.recommendationService.getMyRecommendationProfile(currentMember._id);
+		} catch (error) {
+			this.logger.error('Query getMyRecommendationProfile failed', currentMember?._id ?? 'unknown', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get personalized hotel recommendations (requires auth)
+	 */
+	@Query(() => [HotelDto])
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getRecommendedHotels(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit: number,
+	): Promise<HotelDto[]> {
+		try {
+			this.logger.log('Query getRecommendedHotels', currentMember?._id ?? 'unknown');
+			return this.recommendationService.getRecommendedHotels(currentMember._id, limit);
+		} catch (error) {
+			this.logger.error('Query getRecommendedHotels failed', currentMember?._id ?? 'unknown', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get personalized recommendations with stage metadata for transparency/debugging.
+	 */
+	@Query(() => RecommendedHotelsV2Dto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getRecommendedHotelsV2(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit: number,
+	): Promise<RecommendedHotelsV2Dto> {
+		try {
+			this.logger.log('Query getRecommendedHotelsV2', currentMember?._id ?? 'unknown');
+			return this.recommendationService.getRecommendedHotelsV2(currentMember._id, limit);
+		} catch (error) {
+			this.logger.error('Query getRecommendedHotelsV2 failed', currentMember?._id ?? 'unknown', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get trending hotels (public, no auth needed)
+	 */
+	@Query(() => [HotelDto])
+	@Public()
+	public async getTrendingHotels(
+		@Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit: number,
+	): Promise<HotelDto[]> {
+		try {
+			this.logger.log('Query getTrendingHotels');
+			return this.recommendationService.getTrendingHotels(limit);
+		} catch (error) {
+			this.logger.error('Query getTrendingHotels failed', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get trending hotels for a specific location (public)
+	 */
+	@Query(() => [HotelDto])
+	@Public()
+	public async getTrendingByLocation(
+		@Args('location', { type: () => HotelLocation }) location: HotelLocation,
+		@Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit: number,
+	): Promise<HotelDto[]> {
+		try {
+			this.logger.log('Query getTrendingByLocation', location);
+			return this.recommendationService.getTrendingByLocation(location, limit);
+		} catch (error) {
+			this.logger.error('Query getTrendingByLocation failed', location, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get similar hotels to a given hotel (public)
+	 */
+	@Query(() => [HotelDto])
+	@Public()
+	public async getSimilarHotels(
+		@Args('hotelId') hotelId: string,
+		@Args('limit', { type: () => Int, nullable: true, defaultValue: 6 }) limit: number,
+	): Promise<HotelDto[]> {
+		try {
+			this.logger.log('Query getSimilarHotels', hotelId);
+			return this.recommendationService.getSimilarHotels(hotelId, limit);
+		} catch (error) {
+			this.logger.error('Query getSimilarHotels failed', hotelId, error);
+			throw error;
+		}
+	}
+}

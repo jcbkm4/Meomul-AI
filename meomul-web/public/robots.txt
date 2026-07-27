@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /hotels
+Allow: /hotels/*
+Allow: /rooms/*
+Allow: /support
+
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /auth/*
+Disallow: /bookings/*
+Disallow: /chats/*
+Disallow: /dashboard
+Disallow: /notifications
+Disallow: /onboarding
+Disallow: /profile
+Disallow: /settings/*
+
+Sitemap: https://meomul.com/sitemap.xml

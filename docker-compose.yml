@@ -1,0 +1,63 @@
+version: "3.8"
+
+# Local development stack — starts MongoDB, Redis, API, and Batch together.
+# Copy meomul/.env.example to meomul/.env and fill in values before running.
+#
+# Usage:
+#   docker compose up          # start everything
+#   docker compose up api      # start only API + dependencies
+#   docker compose logs -f api # tail API logs
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./meomul
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./meomul/.env
+    environment:
+      - NODE_ENV=production
+      - MONGO_DEV=mongodb://mongo:27017/meomul-dev
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    # Mount uploads volume only when NOT using S3 storage
+    volumes:
+      - uploads:/app/uploads
+
+  batch:
+    build:
+      context: ./meomul
+      dockerfile: Dockerfile.batch
+    restart: unless-stopped
+    env_file:
+      - ./meomul/.env
+    environment:
+      - NODE_ENV=production
+      - MONGO_DEV=mongodb://mongo:27017/meomul-dev
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+
+volumes:
+  mongo_data:
+  uploads:

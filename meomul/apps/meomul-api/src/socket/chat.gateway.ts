@@ -1,0 +1,409 @@
+import {
+	WebSocketGateway,
+	WebSocketServer,
+	SubscribeMessage,
+	OnGatewayConnection,
+	OnGatewayDisconnect,
+	ConnectedSocket,
+	MessageBody,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import type { Model } from 'mongoose';
+import { MemberType } from '../libs/enums/member.enum';
+import { ChatScope } from '../libs/enums/common.enum';
+import type { ChatDocument } from '../libs/types/chat';
+import type { HotelDocument } from '../libs/types/hotel';
+import { AuthService } from '../components/auth/auth.service';
+
+const resolveSocketOrigins = (): string[] => {
+	const envList = (process.env.SOCKET_CORS_ORIGINS ?? '')
+		.split(',')
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+	const frontendUrl = process.env.FRONTEND_URL?.trim();
+
+	return Array.from(
+		new Set(['http://localhost:3000', 'http://localhost:3001', ...(frontendUrl ? [frontendUrl] : []), ...envList]),
+	);
+};
+
+interface UserSession {
+	socketId: string;
+	userId: string;
+	memberType: MemberType;
+	joinedAt: Date;
+}
+
+interface ChatMessagePayload {
+	chatId: string;
+	message: {
+		senderId: string;
+		senderType: string;
+		messageType: string;
+		content?: string;
+		imageUrl?: string;
+		fileUrl?: string;
+		timestamp: Date;
+		read: boolean;
+	};
+}
+
+@Injectable()
+@WebSocketGateway({
+	cors: {
+		origin: resolveSocketOrigins(),
+		credentials: true,
+	},
+	namespace: '/chat',
+})
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+	private readonly logger = new Logger(ChatGateway.name);
+
+	@WebSocketServer()
+	server: Server;
+
+	constructor(
+		private readonly authService: AuthService,
+		@InjectModel('Chat') private readonly chatModel: Model<ChatDocument>,
+		@InjectModel('Hotel') private readonly hotelModel: Model<HotelDocument>,
+	) {}
+
+	private userSessions: Map<string, UserSession> = new Map();
+	private userSocketMap: Map<string, Set<string>> = new Map();
+	private socketChatMap: Map<string, Set<string>> = new Map(); // socketId -> Set of chatIds
+	private authTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+
+	private static readonly AUTH_TIMEOUT_MS = 5_000;
+
+	async handleConnection(client: Socket) {
+		this.logger.log(`Chat Client Connected: ${client.id}`);
+
+		// Attempt handshake-level auth (token sent via handshake.auth.token)
+		const handshakeToken = this.extractToken(client);
+		if (handshakeToken) {
+			try {
+				const authMember = await this.authService.verifyToken(handshakeToken);
+				if (authMember?._id) {
+					this.registerSession(client, authMember._id, authMember.memberType);
+					return; // authenticated at connection time
+				}
+			} catch {
+				// Token invalid — disconnect immediately
+				client.emit('error', { message: 'Invalid authentication token' });
+				client.disconnect(true);
+				return;
+			}
+		}
+
+		// No handshake token — allow a grace period for the 'authenticate' event
+		const timer = setTimeout(() => {
+			if (!this.userSessions.has(client.id)) {
+				client.emit('error', { message: 'Authentication timeout' });
+				client.disconnect(true);
+			}
+		}, ChatGateway.AUTH_TIMEOUT_MS);
+		this.authTimers.set(client.id, timer);
+	}
+
+	handleDisconnect(client: Socket) {
+		this.logger.log(`Chat Client Disconnected: ${client.id}`);
+
+		// Clear any pending auth timer
+		const timer = this.authTimers.get(client.id);
+		if (timer) {
+			clearTimeout(timer);
+			this.authTimers.delete(client.id);
+		}
+
+		const session = this.userSessions.get(client.id);
+		if (session) {
+			const userSockets = this.userSocketMap.get(session.userId);
+			if (userSockets) {
+				userSockets.delete(client.id);
+				if (userSockets.size === 0) {
+					this.userSocketMap.delete(session.userId);
+				}
+			}
+			this.userSessions.delete(client.id);
+		}
+
+		this.socketChatMap.delete(client.id);
+	}
+
+	/**
+	 * Client authenticates and joins their personal room
+	 */
+	@SubscribeMessage('authenticate')
+	async handleAuthenticate(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() data: { token?: string; userId?: string },
+	) {
+		try {
+			// Already authenticated via handshake — skip re-auth
+			if (this.userSessions.has(client.id)) {
+				const session = this.userSessions.get(client.id)!;
+				return { success: true, userId: session.userId, message: 'Already authenticated' };
+			}
+
+			const rawToken = this.extractToken(client, data?.token);
+			if (!rawToken) {
+				return { success: false, error: 'Authentication token is required' };
+			}
+
+			const authMember = await this.authService.verifyToken(rawToken);
+			const userId = authMember._id;
+			if (!userId) {
+				return { success: false, error: 'Invalid token payload' };
+			}
+
+			if (data?.userId && data.userId !== userId) {
+				return { success: false, error: 'Token user mismatch' };
+			}
+
+			this.registerSession(client, userId, authMember.memberType);
+
+			this.logger.log(`Chat user ${userId} authenticated on socket ${client.id}`);
+
+			return { success: true, userId, message: 'Authenticated to chat' };
+		} catch (error) {
+			this.logger.error('Error authenticating chat user:', error);
+			return { success: false, error: 'Failed to authenticate' };
+		}
+	}
+
+	/**
+	 * Client joins a specific chat room
+	 */
+	@SubscribeMessage('joinChat')
+	async handleJoinChat(@ConnectedSocket() client: Socket, @MessageBody() data: { chatId: string }) {
+		try {
+			const { chatId } = data;
+			const session = this.userSessions.get(client.id);
+
+			if (!session) {
+				return { success: false, error: 'Please authenticate first' };
+			}
+
+			const allowed = await this.canAccessChat(session, chatId);
+			if (!allowed) {
+				return { success: false, error: 'Not allowed to join this chat' };
+			}
+
+			await client.join(`chat:${chatId}`);
+
+			if (!this.socketChatMap.has(client.id)) {
+				this.socketChatMap.set(client.id, new Set());
+			}
+			this.socketChatMap.get(client.id)!.add(chatId);
+
+			this.logger.log(`User ${session.userId} joined chat ${chatId}`);
+
+			return { success: true, chatId, message: 'Joined chat room' };
+		} catch (error) {
+			this.logger.error('Error joining chat:', error);
+			return { success: false, error: 'Failed to join chat' };
+		}
+	}
+
+	/**
+	 * Client leaves a chat room
+	 */
+	@SubscribeMessage('leaveChat')
+	async handleLeaveChat(@ConnectedSocket() client: Socket, @MessageBody() data: { chatId: string }) {
+		try {
+			const { chatId } = data;
+
+			await client.leave(`chat:${chatId}`);
+
+			const chatIds = this.socketChatMap.get(client.id);
+			if (chatIds) {
+				chatIds.delete(chatId);
+			}
+
+			return { success: true, chatId, message: 'Left chat room' };
+		} catch (error) {
+			console.error('Error leaving chat:', error);
+			return { success: false, error: 'Failed to leave chat' };
+		}
+	}
+
+	/**
+	 * Client is typing in a chat
+	 */
+	@SubscribeMessage('typing')
+	handleTyping(@ConnectedSocket() client: Socket, @MessageBody() data: { chatId: string }) {
+		const session = this.userSessions.get(client.id);
+		if (!session) return;
+		if (!this.socketChatMap.get(client.id)?.has(data.chatId)) return;
+
+		client.to(`chat:${data.chatId}`).emit('userTyping', {
+			chatId: data.chatId,
+			userId: session.userId,
+			timestamp: new Date(),
+		});
+	}
+
+	/**
+	 * Client stopped typing
+	 */
+	@SubscribeMessage('stopTyping')
+	handleStopTyping(@ConnectedSocket() client: Socket, @MessageBody() data: { chatId: string }) {
+		const session = this.userSessions.get(client.id);
+		if (!session) return;
+		if (!this.socketChatMap.get(client.id)?.has(data.chatId)) return;
+
+		client.to(`chat:${data.chatId}`).emit('userStopTyping', {
+			chatId: data.chatId,
+			userId: session.userId,
+		});
+	}
+
+	private extractToken(client: Socket, tokenFromPayload?: string): string | null {
+		const cookieHeader = typeof client.handshake.headers.cookie === 'string' ? client.handshake.headers.cookie : null;
+		const authHeader =
+			typeof client.handshake.headers.authorization === 'string' ? client.handshake.headers.authorization : null;
+		const authToken = typeof client.handshake.auth?.token === 'string' ? client.handshake.auth.token : null;
+		const cookieToken = this.extractCookieValue(cookieHeader, 'meomul_at');
+		const rawToken = tokenFromPayload || authToken || authHeader || cookieToken;
+		if (!rawToken) return null;
+
+		if (rawToken.startsWith('Bearer ')) {
+			return rawToken.slice(7).trim();
+		}
+
+		return rawToken.trim();
+	}
+
+	private extractCookieValue(cookieHeader: string | null, key: string): string | null {
+		if (!cookieHeader) return null;
+
+		for (const segment of cookieHeader.split(';')) {
+			const [rawName, ...rawValueParts] = segment.split('=');
+			if (!rawName || rawValueParts.length === 0) continue;
+			if (rawName.trim() !== key) continue;
+
+			const rawValue = rawValueParts.join('=').trim();
+			if (!rawValue) return null;
+
+			try {
+				return decodeURIComponent(rawValue);
+			} catch {
+				return rawValue;
+			}
+		}
+
+		return null;
+	}
+
+	private registerSession(client: Socket, userId: string, memberType: MemberType): void {
+		// Clear auth timeout if it was set
+		const timer = this.authTimers.get(client.id);
+		if (timer) {
+			clearTimeout(timer);
+			this.authTimers.delete(client.id);
+		}
+
+		client.join(`user:${userId}`);
+
+		this.userSessions.set(client.id, {
+			socketId: client.id,
+			userId,
+			memberType,
+			joinedAt: new Date(),
+		});
+
+		if (!this.userSocketMap.has(userId)) {
+			this.userSocketMap.set(userId, new Set());
+		}
+		this.userSocketMap.get(userId)!.add(client.id);
+	}
+
+	private async canAccessChat(session: UserSession, chatId: string): Promise<boolean> {
+		const chat = await this.chatModel.findById(chatId).select('guestId assignedAgentId hotelId chatScope').exec();
+
+		if (!chat) return false;
+
+		if (String(chat.guestId) === session.userId) {
+			return true;
+		}
+
+		if (chat.assignedAgentId && String(chat.assignedAgentId) === session.userId) {
+			return true;
+		}
+
+		if (session.memberType === MemberType.ADMIN || session.memberType === MemberType.ADMIN_OPERATOR) {
+			return true;
+		}
+
+		if (session.memberType === MemberType.AGENT) {
+			if (chat.chatScope !== ChatScope.HOTEL || !chat.hotelId) {
+				return false;
+			}
+			const hotel = await this.hotelModel.findById(chat.hotelId).select('memberId').exec();
+			return !!hotel && String(hotel.memberId) === session.userId;
+		}
+
+		return false;
+	}
+
+	// --- Public methods called from ChatService ---
+
+	/**
+	 * Emit new message to all participants in a chat room
+	 */
+	public emitNewMessage(chatId: string, payload: ChatMessagePayload['message']): void {
+		this.server.to(`chat:${chatId}`).emit('newMessage', {
+			chatId,
+			message: payload,
+		});
+	}
+
+	/**
+	 * Emit chat claimed event (agent assigned)
+	 */
+	public emitChatClaimed(chatId: string, agentId: string): void {
+		this.server.to(`chat:${chatId}`).emit('chatClaimed', {
+			chatId,
+			agentId,
+			timestamp: new Date(),
+		});
+	}
+
+	/**
+	 * Emit chat closed event
+	 */
+	public emitChatClosed(chatId: string, closedBy: string): void {
+		this.server.to(`chat:${chatId}`).emit('chatClosed', {
+			chatId,
+			closedBy,
+			timestamp: new Date(),
+		});
+	}
+
+	/**
+	 * Emit messages read event
+	 */
+	public emitMessagesRead(chatId: string, readBy: string): void {
+		this.server.to(`chat:${chatId}`).emit('messagesRead', {
+			chatId,
+			readBy,
+			timestamp: new Date(),
+		});
+	}
+
+	/**
+	 * Send event to a specific user (by userId, across all their sockets)
+	 */
+	public sendToUser(userId: string, event: string, data: any): void {
+		this.server.to(`user:${userId}`).emit(event, data);
+	}
+
+	/**
+	 * Check if a user is connected to the chat namespace
+	 */
+	public isUserOnline(userId: string): boolean {
+		return this.userSocketMap.has(userId);
+	}
+}

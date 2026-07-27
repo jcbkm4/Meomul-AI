@@ -1,0 +1,20 @@
+{$APP_DOMAIN} {
+  encode zstd gzip
+
+  @uploads path /uploads/*
+  handle @uploads {
+    reverse_proxy api:3001
+  }
+
+  reverse_proxy frontend:3000
+}
+
+{$API_DOMAIN} {
+  encode zstd gzip
+
+  request_body {
+    max_size 100MB
+  }
+
+  reverse_proxy api:3001
+}

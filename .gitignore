@@ -1,0 +1,52 @@
+# ---- Secrets ----------------------------------------------------------------
+# Never commit real env files. Templates (*.example) are explicitly re-included.
+.env
+.env.*
+!.env.example
+!.env.*.example
+!*.env.example
+
+# ---- Dependencies -----------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+
+# ---- Build output -----------------------------------------------------------
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# ---- Runtime / user data ----------------------------------------------------
+# Uploaded media lives on the host volume, never in git.
+data/uploads/
+meomul/uploads/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# ---- Test / coverage --------------------------------------------------------
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# ---- Python (scripts/*.py ERD generators) -----------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---- Editor / OS ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# ---- Local agent state ------------------------------------------------------
+.claude/settings.local.json
+
+# ---- Archives ---------------------------------------------------------------
+*.bundle

@@ -1,0 +1,222 @@
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Logger } from '@nestjs/common';
+import { ReviewDto } from '../../libs/dto/review/review';
+import { ReviewInput } from '../../libs/dto/review/review.input';
+import { ReviewUpdate } from '../../libs/dto/review/review.update';
+import { ReviewsDto } from '../../libs/dto/common/reviews';
+import { HomeTestimonialDto } from '../../libs/dto/home/home';
+import { PaginationInput } from '../../libs/dto/common/pagination';
+import { CurrentMember } from '../auth/decorators/current-member.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
+import type { MemberJwtPayload } from '../../libs/types/member';
+import { ReviewStatus } from '../../libs/enums/common.enum';
+import { ReviewService } from './review.service';
+
+@Resolver()
+export class ReviewResolver {
+	private readonly logger = new Logger(ReviewResolver.name);
+
+	constructor(private readonly reviewService: ReviewService) {}
+
+	/**
+	 * Get all reviews (ADMIN only) — includes FLAGGED, REMOVED
+	 */
+	@Query(() => ReviewsDto)
+	@Roles(MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getAllReviewsAdmin(
+		@Args('input') input: PaginationInput,
+		@Args('statusFilter', { type: () => ReviewStatus, nullable: true }) statusFilter?: ReviewStatus,
+	): Promise<ReviewsDto> {
+		try {
+			this.logger.log('Query getAllReviewsAdmin', statusFilter ?? 'all');
+			return this.reviewService.getAllReviewsAdmin(input, statusFilter);
+		} catch (error) {
+			this.logger.error('Query getAllReviewsAdmin failed', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Create a review for a completed booking
+	 */
+	@Mutation(() => ReviewDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN)
+	public async createReview(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: ReviewInput,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Mutation createReview', currentMember?._id ?? 'unknown', input.bookingId);
+			return this.reviewService.createReview(currentMember, input);
+		} catch (error) {
+			this.logger.error('Mutation createReview failed', currentMember?._id ?? 'unknown', input.bookingId, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update review
+	 */
+	@Mutation(() => ReviewDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN)
+	public async updateReview(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: ReviewUpdate,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Mutation updateReview', currentMember?._id ?? 'unknown', input._id);
+			return this.reviewService.updateReview(currentMember, input);
+		} catch (error) {
+			this.logger.error('Mutation updateReview failed', currentMember?._id ?? 'unknown', input._id, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete review (soft delete)
+	 */
+	@Mutation(() => ReviewDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN)
+	public async deleteReview(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('reviewId') reviewId: string,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Mutation deleteReview', currentMember?._id ?? 'unknown', reviewId);
+			return this.reviewService.deleteReview(currentMember, reviewId);
+		} catch (error) {
+			this.logger.error('Mutation deleteReview failed', currentMember?._id ?? 'unknown', reviewId, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get single review (public)
+	 * Auto-tracks view if user is authenticated
+	 */
+	@Query(() => ReviewDto)
+	@Public()
+	public async getReview(
+		@Args('reviewId') reviewId: string,
+		@CurrentMember() currentMember?: MemberJwtPayload,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Query getReview', reviewId, currentMember?._id ?? 'anonymous');
+			return this.reviewService.getReview(reviewId, currentMember);
+		} catch (error) {
+			this.logger.error('Query getReview failed', reviewId, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get hotel reviews (public)
+	 */
+	@Query(() => ReviewsDto)
+	@Public()
+	public async getHotelReviews(
+		@Args('hotelId') hotelId: string,
+		@Args('input') input: PaginationInput,
+	): Promise<ReviewsDto> {
+		try {
+			this.logger.log('Query getHotelReviews', hotelId, input.page);
+			return this.reviewService.getHotelReviews(hotelId, input);
+		} catch (error) {
+			this.logger.error('Query getHotelReviews failed', hotelId, input.page, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Homepage testimonials (public, single feed).
+	 */
+	@Query(() => [HomeTestimonialDto])
+	@Public()
+	public async getHomeTestimonials(
+		@Args('limit', { type: () => Int, nullable: true, defaultValue: 6 }) limit: number,
+	): Promise<HomeTestimonialDto[]> {
+		try {
+			this.logger.log('Query getHomeTestimonials', limit);
+			return this.reviewService.getHomeTestimonials(limit);
+		} catch (error) {
+			this.logger.error('Query getHomeTestimonials failed', limit, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get user's own reviews
+	 */
+	@Query(() => ReviewsDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN)
+	public async getMyReviews(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: PaginationInput,
+	): Promise<ReviewsDto> {
+		try {
+			this.logger.log('Query getMyReviews', currentMember?._id ?? 'unknown', input.page);
+			return this.reviewService.getMyReviews(currentMember, input);
+		} catch (error) {
+			this.logger.error('Query getMyReviews failed', currentMember?._id ?? 'unknown', input.page, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Hotel agent responds to review
+	 */
+	@Mutation(() => ReviewDto)
+	@Roles(MemberType.AGENT, MemberType.ADMIN)
+	public async respondToReview(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('reviewId') reviewId: string,
+		@Args('responseText') responseText: string,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Mutation respondToReview', currentMember?._id ?? 'unknown', reviewId);
+			return this.reviewService.respondToReview(currentMember, reviewId, responseText);
+		} catch (error) {
+			this.logger.error('Mutation respondToReview failed', currentMember?._id ?? 'unknown', reviewId, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Mark review as helpful (toggle like)
+	 */
+	@Mutation(() => ReviewDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async markHelpful(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('reviewId') reviewId: string,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Mutation markHelpful', currentMember?._id ?? 'unknown', reviewId);
+			return this.reviewService.markHelpful(currentMember, reviewId);
+		} catch (error) {
+			this.logger.error('Mutation markHelpful failed', currentMember?._id ?? 'unknown', reviewId, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update review status (admin only)
+	 */
+	@Mutation(() => ReviewDto)
+	@Roles(MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async updateReviewStatus(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('reviewId') reviewId: string,
+		@Args('status', { type: () => ReviewStatus }) status: ReviewStatus,
+	): Promise<ReviewDto> {
+		try {
+			this.logger.log('Mutation updateReviewStatus', currentMember?._id ?? 'unknown', reviewId, status);
+			return this.reviewService.updateReviewStatus(currentMember, reviewId, status);
+		} catch (error) {
+			this.logger.error('Mutation updateReviewStatus failed', currentMember?._id ?? 'unknown', reviewId, error);
+			throw error;
+		}
+	}
+}

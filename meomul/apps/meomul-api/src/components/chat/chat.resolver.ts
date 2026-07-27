@@ -1,0 +1,202 @@
+import { Args, Mutation, Query, Resolver, Int } from '@nestjs/graphql';
+import { Logger } from '@nestjs/common';
+import { ChatDto } from '../../libs/dto/chat/chat';
+import { StartChatInput } from '../../libs/dto/chat/chat.input';
+import { StartSupportChatInput } from '../../libs/dto/chat/support-chat.input';
+import { SendMessageInput } from '../../libs/dto/chat/message.input';
+import { ClaimChatInput } from '../../libs/dto/chat/claim-chat.input';
+import { ChatsDto } from '../../libs/dto/common/chats';
+import { PaginationInput } from '../../libs/dto/common/pagination';
+import { ChatScope, ChatStatus } from '../../libs/enums/common.enum';
+import { CurrentMember } from '../auth/decorators/current-member.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
+import type { MemberJwtPayload } from '../../libs/types/member';
+import { ChatService } from './chat.service';
+
+@Resolver()
+export class ChatResolver {
+	private readonly logger = new Logger(ChatResolver.name);
+
+	constructor(private readonly chatService: ChatService) {}
+
+	/**
+	 * Guest starts a new chat with a hotel
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.USER)
+	public async startChat(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: StartChatInput,
+	): Promise<ChatDto> {
+		this.logger.log('Mutation startChat', currentMember?._id, input.hotelId);
+		return this.chatService.startChat(currentMember, input);
+	}
+
+	/**
+	 * User starts a general platform support chat (not tied to a specific hotel)
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.USER, MemberType.AGENT)
+	public async startSupportChat(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: StartSupportChatInput,
+	): Promise<ChatDto> {
+		this.logger.log('Mutation startSupportChat', currentMember?._id, input.topic);
+		return this.chatService.startSupportChat(currentMember, input);
+	}
+
+	/**
+	 * Send a message in an existing chat
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async sendMessage(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: SendMessageInput,
+	): Promise<ChatDto> {
+		this.logger.log('Mutation sendMessage', currentMember?._id, input.chatId, input.messageType);
+		return this.chatService.sendMessage(currentMember, input);
+	}
+
+	/**
+	 * Agent claims an unassigned chat
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async claimChat(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: ClaimChatInput,
+	): Promise<ChatDto> {
+		this.logger.log('Mutation claimChat', currentMember?._id, input.chatId);
+		return this.chatService.claimChat(currentMember, input);
+	}
+
+	/**
+	 * Close a chat
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async closeChat(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('chatId') chatId: string,
+	): Promise<ChatDto> {
+		this.logger.log('Mutation closeChat', currentMember?._id, chatId);
+		return this.chatService.closeChat(currentMember, chatId);
+	}
+
+	/**
+	 * Mark messages as read
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async markChatMessagesAsRead(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('chatId') chatId: string,
+	): Promise<ChatDto> {
+		this.logger.log('Mutation markChatMessagesAsRead', currentMember?._id, chatId);
+		return this.chatService.markMessagesAsRead(currentMember, chatId);
+	}
+
+	/**
+	 * Get a single chat by ID
+	 */
+	@Query(() => ChatDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getChat(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('chatId') chatId: string,
+	): Promise<ChatDto> {
+		this.logger.log('Query getChat', currentMember?._id, chatId);
+		return this.chatService.getChat(currentMember, chatId);
+	}
+
+	/**
+	 * Get current user's chats (as guest)
+	 */
+	@Query(() => ChatsDto)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN)
+	public async getMyChats(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: PaginationInput,
+	): Promise<ChatsDto> {
+		this.logger.log('Query getMyChats', currentMember?._id);
+		return this.chatService.getMyChats(currentMember, input);
+	}
+
+	@Query(() => ChatsDto)
+	@Roles(MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getOperatorChats(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: PaginationInput,
+		@Args('scopeFilter', { type: () => ChatScope, nullable: true }) scopeFilter?: ChatScope,
+		@Args('statusFilter', { type: () => ChatStatus, nullable: true }) statusFilter?: ChatStatus,
+		@Args('hotelId', { type: () => String, nullable: true }) hotelId?: string,
+	): Promise<ChatsDto> {
+		this.logger.log('Query getOperatorChats', currentMember?._id, scopeFilter, statusFilter, hotelId);
+		return this.chatService.getOperatorChats(currentMember, input, scopeFilter, statusFilter, hotelId);
+	}
+
+	/**
+	 * Get hotel's chats (for agent/admin)
+	 */
+	@Query(() => ChatsDto)
+	@Roles(MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getHotelChats(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('hotelId') hotelId: string,
+		@Args('input') input: PaginationInput,
+		@Args('statusFilter', { type: () => ChatStatus, nullable: true }) statusFilter?: ChatStatus,
+	): Promise<ChatsDto> {
+		this.logger.log('Query getHotelChats', currentMember?._id, hotelId, statusFilter);
+		return this.chatService.getHotelChats(currentMember, hotelId, input, statusFilter);
+	}
+
+	/**
+	 * Get total unread message count for current user
+	 */
+	@Query(() => Int)
+	@Roles(MemberType.USER, MemberType.AGENT, MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getMyUnreadChatCount(@CurrentMember() currentMember: MemberJwtPayload): Promise<number> {
+		this.logger.debug('Query getMyUnreadChatCount', currentMember?._id);
+		return this.chatService.getMyUnreadCount(currentMember);
+	}
+
+	/**
+	 * Get all chats (admin only)
+	 */
+	@Query(() => ChatsDto)
+	@Roles(MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async getAllChatsAdmin(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('input') input: PaginationInput,
+		@Args('statusFilter', { type: () => ChatStatus, nullable: true }) statusFilter?: ChatStatus,
+	): Promise<ChatsDto> {
+		try {
+			this.logger.log('Query getAllChatsAdmin', statusFilter);
+			return this.chatService.getAllChatsAdmin(currentMember, input, statusFilter);
+		} catch (error) {
+			this.logger.error('Query getAllChatsAdmin failed', statusFilter, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Admin reassigns a chat to a different agent
+	 */
+	@Mutation(() => ChatDto)
+	@Roles(MemberType.ADMIN, MemberType.ADMIN_OPERATOR)
+	public async reassignChat(
+		@CurrentMember() currentMember: MemberJwtPayload,
+		@Args('chatId') chatId: string,
+		@Args('newAgentId') newAgentId: string,
+	): Promise<ChatDto> {
+		try {
+			this.logger.log('Mutation reassignChat', chatId, newAgentId);
+			return this.chatService.reassignChat(currentMember, chatId, newAgentId);
+		} catch (error) {
+			this.logger.error('Mutation reassignChat failed', chatId, newAgentId, error);
+			throw error;
+		}
+	}
+}
