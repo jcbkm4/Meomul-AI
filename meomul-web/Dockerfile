@@ -56,6 +56,16 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
 
+RUN chown -R node:node /app
+
+# Drop root — the server only ever reads from this filesystem.
+USER node
+
 EXPOSE 3000
+
+# Probes the real app rather than the port: a Next server that boots but cannot render
+# still answers TCP. wget ships with busybox on alpine.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 || exit 1
 
 CMD ["npm", "run", "start"]

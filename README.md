@@ -116,8 +116,21 @@ Production runs as a Docker Compose stack behind Caddy (automatic TLS):
 `caddy → frontend:3000 + api:3001`, plus `batch` and `redis`. MongoDB is hosted on Atlas.
 
 ```bash
+# One-time: the containers run as the unprivileged `node` user (uid 1000), so the
+# host-side uploads directory must be writable by it.
+mkdir -p data/uploads && sudo chown -R 1000:1000 data/uploads
+
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
+
+All three app containers run as non-root, declare a `HEALTHCHECK`, and start with
+`init: true` for correct signal handling. `depends_on` uses `condition: service_healthy`,
+so Caddy only begins routing once the frontend and API actually pass their probes —
+not merely when their containers start. Check with `docker compose ps`: services should
+read `healthy`, not just `running`.
+
+The batch worker has no HEALTHCHECK because it runs no HTTP listener; its liveness is
+visible through the cron lock records and the failure webhook.
 
 `scripts/digitalocean/` and `scripts/azure/` hold deploy scripts for those providers.
 **The current target is Google Cloud and that path is not yet built** — see the

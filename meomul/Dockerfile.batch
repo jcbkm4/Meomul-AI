@@ -19,4 +19,12 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
 
+RUN chown -R node:node /app
+
+# Drop root — the worker needs no privileged access.
+USER node
+
+# No HEALTHCHECK: the batch worker runs no HTTP listener, so there is nothing to probe.
+# Liveness is observable through the cron lock records and the failure webhook.
+
 CMD ["node", "dist/apps/meomul-batch/main"]

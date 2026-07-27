@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Local development stack — starts MongoDB, Redis, API, and Batch together.
 # Copy meomul/.env.example to meomul/.env and fill in values before running.
 #
@@ -33,7 +31,10 @@ services:
     env_file:
       - ./meomul/.env
     environment:
-      - NODE_ENV=production
+      # MUST be development. database.module.ts selects MONGO_PROD when NODE_ENV is
+      # "production", so setting it here made `docker compose up` connect the local
+      # stack to the production Atlas cluster and ignore MONGO_DEV entirely.
+      - NODE_ENV=development
       - MONGO_DEV=mongodb://mongo:27017/meomul-dev
       - REDIS_URL=redis://redis:6379
     depends_on:
@@ -51,7 +52,10 @@ services:
     env_file:
       - ./meomul/.env
     environment:
-      - NODE_ENV=production
+      # MUST be development. database.module.ts selects MONGO_PROD when NODE_ENV is
+      # "production", so setting it here made `docker compose up` connect the local
+      # stack to the production Atlas cluster and ignore MONGO_DEV entirely.
+      - NODE_ENV=development
       - MONGO_DEV=mongodb://mongo:27017/meomul-dev
       - REDIS_URL=redis://redis:6379
     depends_on:

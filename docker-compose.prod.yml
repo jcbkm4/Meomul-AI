@@ -3,8 +3,10 @@ services:
     image: caddy:2.10-alpine
     restart: unless-stopped
     depends_on:
-      - frontend
-      - api
+      frontend:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     networks:
       - default
       - edge
@@ -32,6 +34,7 @@ services:
         # Inlined into the bundle at build time — a rebuild is required to change it.
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     restart: unless-stopped
+    init: true
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -57,7 +60,9 @@ services:
       SENTRY_RELEASE: ${NEXT_PUBLIC_BUILD_ID:-}
       REDIS_URL: redis://redis:6379
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    init: true
     volumes:
       - ./data/uploads:/app/uploads
 
@@ -78,12 +83,19 @@ services:
       # MongoDB indexes at boot. Idempotent and additive — it never drops an index.
       RUN_INDEX_SYNC: ${RUN_INDEX_SYNC:-true}
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    init: true
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     volumes:
       - redis_data:/data
 
