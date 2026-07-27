@@ -296,11 +296,7 @@ export class RoomService {
 			)
 			.exec();
 
-		const activeHotels = await this.hotelModel
-			.find({ hotelStatus: HotelStatus.ACTIVE })
-			.select('_id')
-			.lean()
-			.exec();
+		const activeHotels = await this.hotelModel.find({ hotelStatus: HotelStatus.ACTIVE }).select('_id').lean().exec();
 		const activeHotelIds = activeHotels.map((hotel) => hotel._id);
 		if (activeHotelIds.length === 0) {
 			return 0;
@@ -663,11 +659,7 @@ export class RoomService {
 	}
 
 	private async ensureHotelIsPubliclyAvailable(hotelId: string): Promise<void> {
-		const hotel = await this.hotelModel
-			.findById(hotelId)
-			.select('hotelStatus')
-			.lean()
-			.exec();
+		const hotel = await this.hotelModel.findById(hotelId).select('hotelStatus').lean().exec();
 
 		if (!hotel || hotel.hotelStatus !== HotelStatus.ACTIVE) {
 			throw new NotFoundException(Messages.NO_DATA_FOUND);

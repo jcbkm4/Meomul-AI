@@ -23,4 +23,3 @@ export class AiConciergeResolver {
 		return this.aiConciergeService.ask(currentMember ?? null, input);
 	}
 }
-

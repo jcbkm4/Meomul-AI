@@ -115,10 +115,7 @@ export class ChatService {
 			if (existingSupportChats.length > 1) {
 				const duplicateIds = existingSupportChats.slice(1).map((chat) => chat._id);
 				if (duplicateIds.length > 0) {
-					await this.chatModel.updateMany(
-						{ _id: { $in: duplicateIds } },
-						{ $set: { chatStatus: ChatStatus.CLOSED } },
-					);
+					await this.chatModel.updateMany({ _id: { $in: duplicateIds } }, { $set: { chatStatus: ChatStatus.CLOSED } });
 				}
 			}
 
@@ -586,11 +583,7 @@ export class ChatService {
 		chats: Array<Pick<ChatDocument, 'guestId'>>,
 	): Promise<Map<string, { guestNick?: string; guestImage?: string; guestMemberType?: MemberType }>> {
 		const guestIds = Array.from(
-			new Set(
-				chats
-					.map((chat) => String(chat.guestId ?? ''))
-					.filter((guestId) => Types.ObjectId.isValid(guestId)),
-			),
+			new Set(chats.map((chat) => String(chat.guestId ?? '')).filter((guestId) => Types.ObjectId.isValid(guestId))),
 		);
 
 		if (guestIds.length === 0) {
@@ -786,11 +779,7 @@ export class ChatService {
 		}
 
 		if (currentMember.memberType === MemberType.AGENT) {
-			const ownedHotels = await this.hotelModel
-				.find({ memberId: currentMember._id })
-				.select('_id')
-				.lean()
-				.exec();
+			const ownedHotels = await this.hotelModel.find({ memberId: currentMember._id }).select('_id').lean().exec();
 			const ownedHotelIds = ownedHotels.map((hotel) => hotel._id);
 
 			filter.chatScope = ChatScope.HOTEL;

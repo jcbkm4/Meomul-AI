@@ -24,4 +24,3 @@ import { AiConciergeService } from './ai-concierge.service';
 	exports: [AiConciergeService],
 })
 export class AiConciergeModule {}
-

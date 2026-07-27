@@ -903,7 +903,9 @@ export class RecommendationService {
 			return true;
 		});
 		const locationMatched = uniqueHotels.filter((hotel) => profile.preferredLocations.includes(hotel.hotelLocation));
-		const nonLocationMatched = uniqueHotels.filter((hotel) => !profile.preferredLocations.includes(hotel.hotelLocation));
+		const nonLocationMatched = uniqueHotels.filter(
+			(hotel) => !profile.preferredLocations.includes(hotel.hotelLocation),
+		);
 		if (locationMatched.length === 0 || nonLocationMatched.length === 0) {
 			return uniqueHotels.slice(0, limit);
 		}
@@ -927,11 +929,7 @@ export class RecommendationService {
 			);
 		});
 
-		const targetNonLocationCount = Math.min(
-			nonLocationPriority.length,
-			Math.max(2, Math.floor(limit / 2)),
-		);
-		const maxLocationMatched = Math.max(1, limit - targetNonLocationCount);
+		const targetNonLocationCount = Math.min(nonLocationPriority.length, Math.max(2, Math.floor(limit / 2)));
 		const targetLocationCount = Math.min(locationMatched.length, limit - targetNonLocationCount);
 
 		const diversified: HotelDto[] = [];

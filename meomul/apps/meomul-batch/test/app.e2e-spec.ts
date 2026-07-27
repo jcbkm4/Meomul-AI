@@ -4,21 +4,21 @@ import request from 'supertest';
 import { MeomulBatchModule } from './../src/meomul-batch.module';
 
 describe('MeomulBatchController (e2e)', () => {
-  let app: INestApplication;
+	let app: INestApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [MeomulBatchModule],
-    }).compile();
+	beforeEach(async () => {
+		const moduleFixture: TestingModule = await Test.createTestingModule({
+			imports: [MeomulBatchModule],
+		}).compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+		app = moduleFixture.createNestApplication();
+		await app.init();
+	});
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
+	it('/ (GET)', () => {
+		return request(app.getHttpServer() as Parameters<typeof request>[0])
+			.get('/')
+			.expect(200)
+			.expect('Hello World!');
+	});
 });

@@ -52,11 +52,7 @@ export class DealService {
 		await this.cronLockService.runLocked('deal.generateDeals', 55 * 60 * 1000, async () => {
 			const now = new Date();
 
-			const activeHotels = await this.hotelModel
-				.find({ hotelStatus: HotelStatus.ACTIVE })
-				.select('_id')
-				.lean()
-				.exec();
+			const activeHotels = await this.hotelModel.find({ hotelStatus: HotelStatus.ACTIVE }).select('_id').lean().exec();
 			const activeHotelIds = activeHotels.map((hotel) => hotel._id);
 			if (activeHotelIds.length === 0) {
 				return;

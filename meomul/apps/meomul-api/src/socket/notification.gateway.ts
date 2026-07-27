@@ -345,7 +345,8 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 			this.authTimers.delete(client.id);
 		}
 
-		client.join(`user:${userId}`);
+		// join() is async under the Redis adapter; nothing here depends on completion.
+		void client.join(`user:${userId}`);
 
 		this.userSessions.set(client.id, {
 			socketId: client.id,

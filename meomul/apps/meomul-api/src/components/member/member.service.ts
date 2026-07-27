@@ -212,10 +212,7 @@ export class MemberService {
 			throw new UnauthorizedException(Messages.NOT_AUTHENTICATED);
 		}
 
-		if (
-			input.status !== HostApplicationStatus.APPROVED &&
-			input.status !== HostApplicationStatus.REJECTED
-		) {
+		if (input.status !== HostApplicationStatus.APPROVED && input.status !== HostApplicationStatus.REJECTED) {
 			throw new BadRequestException('Host application review must be APPROVED or REJECTED');
 		}
 

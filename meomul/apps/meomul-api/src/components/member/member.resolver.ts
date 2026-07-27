@@ -131,9 +131,7 @@ export class MemberResolver {
 	@Mutation(() => ResponseDto)
 	@Public()
 	@Throttle({ long: { limit: 5, ttl: 60000 } })
-	public async resetPassword(
-		@Args('input') input: ResetPasswordInput,
-	): Promise<ResponseDto> {
+	public async resetPassword(@Args('input') input: ResetPasswordInput): Promise<ResponseDto> {
 		try {
 			this.logger.log('Mutation resetPassword');
 			return this.memberService.resetPassword(input);
@@ -275,7 +273,12 @@ export class MemberResolver {
 			this.logger.log('Mutation reviewHostApplication', currentMember?._id ?? 'unknown', input.applicationId);
 			return this.memberService.reviewHostApplication(currentMember, input);
 		} catch (error) {
-			this.logger.error('Mutation reviewHostApplication failed', currentMember?._id ?? 'unknown', input.applicationId, error);
+			this.logger.error(
+				'Mutation reviewHostApplication failed',
+				currentMember?._id ?? 'unknown',
+				input.applicationId,
+				error,
+			);
 			throw error;
 		}
 	}

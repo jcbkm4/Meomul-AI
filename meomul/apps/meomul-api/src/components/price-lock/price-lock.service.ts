@@ -157,7 +157,9 @@ export class PriceLockService {
 		return room.basePrice;
 	}
 
-	private async assertRoomIsPubliclyBookable(room: Pick<RoomDocument, '_id' | 'hotelId' | 'roomStatus'>): Promise<void> {
+	private async assertRoomIsPubliclyBookable(
+		room: Pick<RoomDocument, '_id' | 'hotelId' | 'roomStatus'>,
+	): Promise<void> {
 		if (room.roomStatus && room.roomStatus !== RoomStatus.AVAILABLE) {
 			throw new BadRequestException('Room is not available for price lock');
 		}

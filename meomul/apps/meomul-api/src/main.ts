@@ -7,6 +7,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import compression from 'compression';
+import { json } from 'express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './socket/redis-io.adapter';
@@ -37,7 +38,7 @@ async function bootstrap() {
 	app.use(cookieParser(cookieSecret ?? 'dev_cookie_secret'));
 
 	// Request body size limit
-	app.use(require('express').json({ limit: '1mb' }));
+	app.use(json({ limit: '1mb' }));
 
 	// CORS — restrict localhost origins to development only
 	const frontendUrl = process.env.FRONTEND_URL;

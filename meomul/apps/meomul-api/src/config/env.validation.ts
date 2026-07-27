@@ -1,13 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import {
-	IsEnum,
-	IsInt,
-	IsOptional,
-	IsString,
-	IsUrl,
-	MinLength,
-	validateSync,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUrl, MinLength, validateSync } from 'class-validator';
 
 enum Environment {
 	Development = 'development',
@@ -78,9 +70,7 @@ export function validateEnv(config: Record<string, unknown>): EnvironmentVariabl
 
 	// class-validator's @IsOptional() only skips null/undefined, not empty strings.
 	// Convert empty strings to undefined so optional URL fields don't fail validation.
-	const sanitized = Object.fromEntries(
-		Object.entries(config).map(([k, v]) => [k, v === '' ? undefined : v]),
-	);
+	const sanitized = Object.fromEntries(Object.entries(config).map(([k, v]) => [k, v === '' ? undefined : v]));
 
 	const validated = plainToInstance(EnvironmentVariables, sanitized, {
 		enableImplicitConversion: true,

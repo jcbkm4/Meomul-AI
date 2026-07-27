@@ -42,8 +42,7 @@ export class AuthGuard implements CanActivate {
 				: Array.isArray(authorizationHeader)
 					? authorizationHeader[0]
 					: undefined;
-		const bearerToken =
-			bearerHeader && bearerHeader.startsWith('Bearer ') ? bearerHeader.slice(7) : undefined;
+		const bearerToken = bearerHeader && bearerHeader.startsWith('Bearer ') ? bearerHeader.slice(7) : undefined;
 
 		const token = cookieToken ?? bearerToken;
 

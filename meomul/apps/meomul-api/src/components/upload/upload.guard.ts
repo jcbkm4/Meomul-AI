@@ -21,8 +21,7 @@ export class UploadGuard implements CanActivate {
 					? authorizationHeader[0]
 					: undefined;
 
-		const bearerToken =
-			authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+		const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
 		const token = cookieToken ?? bearerToken;
 
 		if (!token) {

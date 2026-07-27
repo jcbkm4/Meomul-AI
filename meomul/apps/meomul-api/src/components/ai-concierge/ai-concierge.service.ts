@@ -12,11 +12,7 @@ import type { ReviewDocument } from '../../libs/types/review';
 import type { UserProfileDocument } from '../../libs/types/user-profile';
 import type { AiConciergeSessionDocument } from '../../libs/types/ai-concierge';
 import { AskStayConciergeInput } from '../../libs/dto/ai-concierge/ai-concierge.input';
-import {
-	StayCandidateDto,
-	StayConciergeResultDto,
-	StayIntentDto,
-} from '../../libs/dto/ai-concierge/ai-concierge';
+import { StayCandidateDto, StayConciergeResultDto, StayIntentDto } from '../../libs/dto/ai-concierge/ai-concierge';
 
 type CandidateContext = {
 	hotel: HotelDocument;
@@ -135,7 +131,10 @@ export class AiConciergeService {
 		return result;
 	}
 
-	private async buildIntent(currentMember: MemberJwtPayload | null, input: AskStayConciergeInput): Promise<StayIntentDto> {
+	private async buildIntent(
+		currentMember: MemberJwtPayload | null,
+		input: AskStayConciergeInput,
+	): Promise<StayIntentDto> {
 		const message = input.message.trim();
 		const lower = message.toLowerCase();
 		const explicitLanguage = input.language === 'ko' || input.language === 'en' ? input.language : undefined;
@@ -211,7 +210,9 @@ export class AiConciergeService {
 
 	private extractBudgetMax(text: string): number | undefined {
 		const compact = text.replace(/,/g, '');
-		const krwMatch = compact.match(/(?:under|below|less than|max|budget|up to|까지|이하|예산)\s*(?:₩|krw)?\s*(\d{5,7})/i);
+		const krwMatch = compact.match(
+			/(?:under|below|less than|max|budget|up to|까지|이하|예산)\s*(?:₩|krw)?\s*(\d{5,7})/i,
+		);
 		if (krwMatch) {
 			return Number(krwMatch[1]);
 		}
@@ -290,11 +291,7 @@ export class AiConciergeService {
 			roomFilter.maxOccupancy = { $gte: intent.guests };
 		}
 
-		const rooms = await this.roomModel
-			.find(roomFilter)
-			.sort({ basePrice: 1, availableRooms: -1 })
-			.limit(240)
-			.exec();
+		const rooms = await this.roomModel.find(roomFilter).sort({ basePrice: 1, availableRooms: -1 }).limit(240).exec();
 		const roomsByHotelId = new Map<string, RoomDocument[]>();
 		for (const room of rooms) {
 			const hotelId = String(room.hotelId);
@@ -469,9 +466,7 @@ export class AiConciergeService {
 			reasons.push(`Matches requested amenities: ${amenityMatches.join(', ')}.`);
 		}
 
-		const missedAmenities = intent.amenities.filter(
-			(amenity) => !this.hotelHasAmenity(hotel, amenity),
-		);
+		const missedAmenities = intent.amenities.filter((amenity) => !this.hotelHasAmenity(hotel, amenity));
 		if (missedAmenities.length > 0) {
 			tradeoffs.push(`Missing or unconfirmed amenities: ${missedAmenities.slice(0, 3).join(', ')}.`);
 		}
@@ -519,7 +514,9 @@ export class AiConciergeService {
 		}
 		if (reviewStats.verifiedCount > 0) {
 			score += 3;
-			trustSignals.push(`${reviewStats.verifiedCount} recent verified stay review${reviewStats.verifiedCount > 1 ? 's' : ''}.`);
+			trustSignals.push(
+				`${reviewStats.verifiedCount} recent verified stay review${reviewStats.verifiedCount > 1 ? 's' : ''}.`,
+			);
 		}
 		if (reviewStats.photoCount > 0) {
 			score += 2;
@@ -530,7 +527,11 @@ export class AiConciergeService {
 			tradeoffs.push(`${hotel.warningStrikes} warning strike${hotel.warningStrikes > 1 ? 's' : ''} recorded.`);
 		}
 
-		if (priceInsight.cheapestDate && priceInsight.cheapestPrice && priceInsight.cheapestPrice < priceInsight.currentPrice) {
+		if (
+			priceInsight.cheapestDate &&
+			priceInsight.cheapestPrice &&
+			priceInsight.cheapestPrice < priceInsight.currentPrice
+		) {
 			score += 4;
 		}
 
@@ -560,7 +561,8 @@ export class AiConciergeService {
 		if (!intent.checkIn || !intent.checkOut) questions.push('What check-in and check-out dates are you considering?');
 		if (!intent.budgetMax) questions.push('What is your maximum nightly budget?');
 		if (!intent.guests) questions.push('How many guests are staying?');
-		if (candidates.length === 0) questions.push('Can you loosen one condition, such as budget, location, or amenity needs?');
+		if (candidates.length === 0)
+			questions.push('Can you loosen one condition, such as budget, location, or amenity needs?');
 		return questions.slice(0, 3);
 	}
 
@@ -609,8 +611,11 @@ export class AiConciergeService {
 		if (!Array.isArray(values)) {
 			return undefined;
 		}
-		const enumValues = new Set(Object.values(enumType));
-		const matched = values.find((value) => typeof value === 'string' && enumValues.has(value));
+		// Array.isArray narrows `unknown` to `any[]`; re-widen to unknown[] so the callback
+		// parameter is checked rather than silently `any`.
+		const candidates: unknown[] = values;
+		const enumValues = new Set<string>(Object.values(enumType));
+		const matched = candidates.find((value) => typeof value === 'string' && enumValues.has(value));
 		return matched as T[keyof T] | undefined;
 	}
 
@@ -635,7 +640,12 @@ export class AiConciergeService {
 		return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 	}
 
-	private calculateDayPrice(basePrice: number, weekendSurcharge: number, isWeekend: boolean, demandLevel: DemandLevel): number {
+	private calculateDayPrice(
+		basePrice: number,
+		weekendSurcharge: number,
+		isWeekend: boolean,
+		demandLevel: DemandLevel,
+	): number {
 		let price = basePrice + (isWeekend ? weekendSurcharge : 0);
 		if (demandLevel === DemandLevel.HIGH) price = Math.round(price * 1.2);
 		if (demandLevel === DemandLevel.MEDIUM) price = Math.round(price * 1.05);

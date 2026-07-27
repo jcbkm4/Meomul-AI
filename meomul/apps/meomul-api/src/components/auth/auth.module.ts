@@ -14,7 +14,6 @@ import { AuthService } from './auth.service';
 
 				if (!secret) {
 					if (process.env.NODE_ENV === 'development') {
-						// eslint-disable-next-line no-console
 						console.warn('[AuthModule] JWT_SECRET not set — using insecure dev secret. Do NOT use in production.');
 					} else {
 						throw new Error('JWT_SECRET environment variable is required. Set it before starting the server.');

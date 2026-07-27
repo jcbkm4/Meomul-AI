@@ -74,7 +74,11 @@ export function countUnreadMessagesForMember(
 	}, 0);
 }
 
-function hasOtherSideReadMessage(msg: MessageSubDocument, chat: ChatDocument, currentMember: MemberJwtPayload): boolean {
+function hasOtherSideReadMessage(
+	msg: MessageSubDocument,
+	chat: ChatDocument,
+	currentMember: MemberJwtPayload,
+): boolean {
 	const currentMemberId = currentMember._id;
 	const currentIsGuest = stringifyObjectId(chat.guestId) === currentMemberId;
 
@@ -89,7 +93,11 @@ function hasOtherSideReadMessage(msg: MessageSubDocument, chat: ChatDocument, cu
 	return hasMemberReadMessage(msg, stringifyObjectId(chat.guestId));
 }
 
-export function toMessageDto(msg: MessageSubDocument, chat?: ChatDocument, currentMember?: MemberJwtPayload): MessageDto {
+export function toMessageDto(
+	msg: MessageSubDocument,
+	chat?: ChatDocument,
+	currentMember?: MemberJwtPayload,
+): MessageDto {
 	return {
 		senderId: msg.senderId as unknown as MessageDto['senderId'],
 		senderType: msg.senderType,
@@ -142,9 +150,7 @@ export function toChatDto(
 		bookingId: doc.bookingId as unknown as ChatDto['bookingId'],
 		supportTopic: doc.supportTopic,
 		sourcePath: doc.sourcePath,
-		...(includeMessages
-			? { messages: doc.messages.map((message) => toMessageDto(message, doc, currentMember)) }
-			: {}),
+		...(includeMessages ? { messages: doc.messages.map((message) => toMessageDto(message, doc, currentMember)) } : {}),
 		lastMessage: lastMessage ? toMessageDto(lastMessage, doc, currentMember) : undefined,
 		chatStatus: doc.chatStatus,
 		unreadGuestMessages,

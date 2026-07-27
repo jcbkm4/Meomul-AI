@@ -1,5 +1,12 @@
 import { Types } from 'mongoose';
-import { HotelLocation, HotelStatus, VerificationStatus, BadgeLevel, HotelType, CancellationPolicy } from '../../libs/enums/hotel.enum';
+import {
+	HotelLocation,
+	HotelStatus,
+	VerificationStatus,
+	BadgeLevel,
+	HotelType,
+	CancellationPolicy,
+} from '../../libs/enums/hotel.enum';
 import { ReviewStatus, StayPurpose } from '../../libs/enums/common.enum';
 import { RoomStatus, RoomType, BedType, ViewType } from '../../libs/enums/room.enum';
 import { AiConciergeService } from './ai-concierge.service';

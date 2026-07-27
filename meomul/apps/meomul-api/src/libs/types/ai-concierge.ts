@@ -14,4 +14,3 @@ export interface AiConciergeSessionDocument extends Document {
 	createdAt: Date;
 	updatedAt: Date;
 }
-

@@ -42,4 +42,3 @@ const AiConciergeSessionSchema = new Schema(
 AiConciergeSessionSchema.index({ createdAt: -1 });
 
 export default AiConciergeSessionSchema;
-
