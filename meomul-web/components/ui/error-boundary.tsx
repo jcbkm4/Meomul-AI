@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import React from "react";
 
 interface ErrorBoundaryProps {
@@ -23,13 +24,13 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log to your error reporting service in production
-    if (process.env.NODE_ENV === "production") {
-      // TODO: integrate with Sentry / Datadog / etc.
-      console.error("[ErrorBoundary]", error, errorInfo);
-    } else {
-      console.error("[ErrorBoundary]", error, errorInfo);
-    }
+    // Sentry is inert when NEXT_PUBLIC_SENTRY_DSN is unset, so this is a no-op locally.
+    // The component stack is what makes these reports actionable — without it you get a
+    // minified frame and nothing else.
+    Sentry.captureException(error, {
+      contexts: { react: { componentStack: errorInfo.componentStack } },
+    });
+    console.error("[ErrorBoundary]", error, errorInfo);
   }
 
   private handleReload = () => {

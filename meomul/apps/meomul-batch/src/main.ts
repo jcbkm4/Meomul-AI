@@ -1,3 +1,6 @@
+// MUST be first: Sentry patches modules as they load.
+import '../../meomul-api/src/instrument';
+
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { MeomulBatchModule } from './meomul-batch.module';

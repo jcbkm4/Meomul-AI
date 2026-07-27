@@ -1,3 +1,7 @@
+// MUST be first: Sentry patches modules as they load, so anything imported before this
+// is invisible to it.
+import { isSentryEnabled } from './instrument';
+
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -80,6 +84,10 @@ async function bootstrap() {
 		} catch (error) {
 			logger.error('Failed to initialize Socket.IO Redis adapter; falling back to in-memory adapter', error);
 		}
+	}
+
+	if (!isSentryEnabled) {
+		logger.warn('SENTRY_DSN is not set — errors will only reach stdout');
 	}
 
 	await app.listen(process.env.PORT_API ?? 3001);

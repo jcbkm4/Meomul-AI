@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SentryModule } from '@sentry/nestjs/setup';
 import type { Connection } from 'mongoose';
 import { MeomulBatchController } from './meomul-batch.controller';
 import { MeomulBatchService } from './meomul-batch.service';
@@ -18,6 +19,7 @@ import { attachMongoSlowQueryMonitor } from '../../meomul-api/src/database/mongo
 
 @Module({
 	imports: [
+		SentryModule.forRoot(),
 		ConfigModule.forRoot(),
 		MongooseModule.forRootAsync({
 			useFactory: () => ({

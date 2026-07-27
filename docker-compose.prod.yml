@@ -29,6 +29,8 @@ services:
         NEXT_PUBLIC_CHAT_SOCKET_URL: ${NEXT_PUBLIC_CHAT_SOCKET_URL}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_BUILD_ID: ${NEXT_PUBLIC_BUILD_ID}
+        # Inlined into the bundle at build time — a rebuild is required to change it.
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -38,6 +40,8 @@ services:
       NEXT_PUBLIC_CHAT_SOCKET_URL: ${NEXT_PUBLIC_CHAT_SOCKET_URL}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
       NEXT_PUBLIC_BUILD_ID: ${NEXT_PUBLIC_BUILD_ID}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+      SENTRY_DSN: ${SENTRY_DSN_WEB:-}
 
   api:
     build:
@@ -49,6 +53,8 @@ services:
     environment:
       NODE_ENV: production
       PORT_API: 3001
+      SENTRY_DSN: ${SENTRY_DSN_API:-}
+      SENTRY_RELEASE: ${NEXT_PUBLIC_BUILD_ID:-}
       REDIS_URL: redis://redis:6379
     depends_on:
       - redis
@@ -65,6 +71,8 @@ services:
     environment:
       NODE_ENV: production
       PORT_BATCH: 3003
+      SENTRY_DSN: ${SENTRY_DSN_API:-}
+      SENTRY_RELEASE: ${NEXT_PUBLIC_BUILD_ID:-}
       REDIS_URL: redis://redis:6379
       # Production runs with autoIndex disabled, so the batch worker builds the
       # MongoDB indexes at boot. Idempotent and additive — it never drops an index.

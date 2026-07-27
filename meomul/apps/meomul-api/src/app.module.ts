@@ -1,5 +1,6 @@
 import { Logger, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { join } from 'path';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
@@ -27,6 +28,8 @@ import { RolesGuard } from './components/auth/guards/roles.guard';
 
 @Module({
 	imports: [
+		// Must be first so Sentry's request isolation wraps every other module.
+		SentryModule.forRoot(),
 		CacheModule.registerAsync({
 			isGlobal: true,
 			useFactory: (): CacheOptions => {

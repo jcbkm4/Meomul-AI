@@ -73,6 +73,24 @@ Note that `NEXT_PUBLIC_*` variables are inlined into the frontend bundle at **bu
 time, so they are passed as Docker build args — changing them requires a rebuild, not
 just a restart.
 
+## Error tracking
+
+Both apps report to Sentry. With no DSN configured the SDKs stay inert, so local
+development and CI are unaffected — set `SENTRY_DSN_API`, `SENTRY_DSN_WEB`, and
+`NEXT_PUBLIC_SENTRY_DSN` in `.env.production` to turn it on.
+
+What is reported: unhandled exceptions and 5xx responses from the GraphQL exception
+filter (4xx are expected outcomes and would drown out real failures), server-side Next.js
+errors, and anything the top-level React error boundary catches, with its component stack.
+
+Performance tracing defaults to a `0` sample rate — it is billed per transaction, and
+errors are the gap today. PII is off everywhere: request bodies, headers, and cookies are
+stripped before send, and Session Replay is disabled because it would record guest booking
+and chat screens.
+
+Note that `NEXT_PUBLIC_SENTRY_DSN` is inlined into the JS bundle at build time, so changing
+it requires a rebuild, not just a restart.
+
 ## Database indexes
 
 Production runs with `autoIndex: false`, so Mongoose does not build indexes on boot.
@@ -110,6 +128,6 @@ production-readiness plan before deploying.
 Do not treat `main` as production-ready yet. The tracked blockers:
 
 - `resetPassword` verifies only nickname + phone — no token, no OTP
-- No error tracking or metrics in either app
+- No metrics or tracing (error tracking is wired, but nothing measures throughput/latency)
 - Test coverage is ~2.6%; `booking.service.ts` is untested
 - Socket auth relies on a `SameSite=None` cross-origin cookie, which Safari blocks
