@@ -56,8 +56,21 @@ describe("resolvePostAuthRedirect", () => {
     const fetchSpy = vi.fn().mockResolvedValue(createFetchResponse(true));
     vi.stubGlobal("fetch", fetchSpy);
 
+    const redirect = await resolvePostAuthRedirect(buildAuthMember("USER"), "/bookings/new");
+
+    expect(redirect).toBe("/bookings/new");
+  });
+
+  it("sends a guest away from host-only targets instead of to the host page", async () => {
+    // /dashboard and the hotel-management routes are host surfaces. A USER who lands on
+    // one after login goes home rather than to a page they cannot use — and the profile
+    // check is skipped entirely, since the target is discarded either way.
+    const fetchSpy = vi.fn().mockResolvedValue(createFetchResponse(true));
+    vi.stubGlobal("fetch", fetchSpy);
+
     const redirect = await resolvePostAuthRedirect(buildAuthMember("USER"), "/dashboard");
 
-    expect(redirect).toBe("/dashboard");
+    expect(redirect).toBe("/");
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

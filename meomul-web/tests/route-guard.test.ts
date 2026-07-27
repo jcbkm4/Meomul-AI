@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionMember } from "@/types/auth";
 
-const mockGetAccessToken = vi.fn();
+// The guard no longer reads a token — the access token is an httpOnly cookie the client
+// cannot see, so it asks the server who the member is via ensureSessionForGuard().
+const mockEnsureSessionForGuard = vi.fn();
+const mockClearAuthSession = vi.fn();
 const mockResolveOnboardingRedirect = vi.fn();
 
 vi.mock("@/lib/auth/session", () => ({
-  getAccessToken: () => mockGetAccessToken(),
+  ensureSessionForGuard: () => mockEnsureSessionForGuard(),
+  clearAuthSession: () => mockClearAuthSession(),
+  getSessionMember: () => null,
 }));
 
 vi.mock("@/lib/auth/onboarding-status", () => ({
@@ -28,16 +33,28 @@ const baseMember: SessionMember = {
 
 describe("resolveGuardRedirect", () => {
   beforeEach(() => {
-    mockGetAccessToken.mockReset();
+    mockEnsureSessionForGuard.mockReset();
+    mockClearAuthSession.mockReset();
     mockResolveOnboardingRedirect.mockReset();
-    mockGetAccessToken.mockReturnValue("test-token");
+    // Default: the server confirms an active session.
+    mockEnsureSessionForGuard.mockResolvedValue(baseMember);
     mockResolveOnboardingRedirect.mockResolvedValue(null);
   });
 
   it("redirects unauthenticated members to login for protected routes", async () => {
+    mockEnsureSessionForGuard.mockResolvedValue(null);
+
     const redirect = await resolveGuardRedirect({ roles: ["USER"] }, null, "/bookings/new");
 
     expect(redirect).toBe("/auth/login?next=%2Fbookings%2Fnew");
+  });
+
+  it("clears the local session when the server no longer recognises the member", async () => {
+    mockEnsureSessionForGuard.mockResolvedValue(null);
+
+    await resolveGuardRedirect({ roles: ["USER"] }, baseMember, "/dashboard");
+
+    expect(mockClearAuthSession).toHaveBeenCalled();
   });
 
   it("redirects to 403 when member role is not allowed", async () => {
@@ -52,7 +69,7 @@ describe("resolveGuardRedirect", () => {
     const redirect = await resolveGuardRedirect({ roles: ["USER"] }, baseMember, "/dashboard");
 
     expect(redirect).toBe("/onboarding?next=%2Fdashboard");
-    expect(mockResolveOnboardingRedirect).toHaveBeenCalledWith(baseMember, "/dashboard", "test-token");
+    expect(mockResolveOnboardingRedirect).toHaveBeenCalledWith(baseMember, "/dashboard");
   });
 
   it("allows navigation when auth and onboarding checks pass", async () => {
