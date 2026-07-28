@@ -49,14 +49,15 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_BUILD_ID=${NEXT_PUBLIC_BUILD_ID}
 ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.mjs ./next.config.mjs
-
-RUN chown -R node:node /app
+# `output: "standalone"` emits a server bundle containing only the modules actually
+# imported, so there is no `npm ci` in this stage at all — the previous runtime carried a
+# full production node_modules (~800MB) where the standalone tree is ~110MB.
+#
+# The three COPYs are the documented standalone layout: the server bundle, then static
+# assets and public/, which Next deliberately leaves out so they can be served from a CDN.
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
 
 # Drop root — the server only ever reads from this filesystem.
 USER node
@@ -68,4 +69,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 || exit 1
 
-CMD ["npm", "run", "start"]
+# The standalone build ships its own server entrypoint; `next start` is not available
+# here because the Next CLI is not part of the bundle.
+CMD ["node", "server.js"]

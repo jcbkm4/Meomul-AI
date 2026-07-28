@@ -50,6 +50,15 @@ const buildCsp = () =>
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Emit a self-contained server bundle with only the modules actually imported, so the
+  // runtime image no longer has to carry a full production node_modules tree.
+  output: "standalone",
+  // @sentry/server-utils reaches for meriyah through a dynamic require, which the
+  // file tracer cannot see. Without this the standalone server starts and then 500s on
+  // every request with MODULE_NOT_FOUND.
+  outputFileTracingIncludes: {
+    "/**/*": ["./node_modules/meriyah/**/*"],
+  },
   i18n: {
     locales: ["en", "ko", "ru", "uz"],
     defaultLocale: "en",

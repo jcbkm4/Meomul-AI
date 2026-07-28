@@ -1,8 +1,16 @@
 import { Html, Head, Main, NextScript } from "next/document";
+import type { DocumentProps } from "next/document";
 
-export default function Document() {
+/**
+ * `lang` comes from the request's locale rather than being hardcoded.
+ *
+ * It used to be a literal "en", patched on the client in _app.tsx after hydration. That
+ * left every server-rendered page — including the ones crawlers and translation tools
+ * actually read — claiming to be English while serving Korean, Russian, or Uzbek.
+ */
+export default function Document({ locale }: DocumentProps) {
   return (
-    <Html lang="en">
+    <Html lang={locale ?? "en"}>
       <Head>
         <meta charSet="utf-8" />
         <meta
