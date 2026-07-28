@@ -80,6 +80,14 @@ export interface SyncResult {
 }
 
 /**
+ * Options that change an index's behaviour, and therefore make two indexes over the same
+ * keys genuinely different. `syncIndexes()` compares these, so a dry run that ignored them
+ * under-reported: it once predicted 4 drops and the real run performed 6, because two TTL
+ * indexes had drifted from their declared expireAfterSeconds.
+ */
+const SIGNIFICANT_OPTIONS = ['unique', 'expireAfterSeconds', 'partialFilterExpression', 'sparse'] as const;
+
+/**
  * Stable key for an index, so schema-declared and database-present indexes compare equal.
  *
  * Text indexes need special handling: a schema declares `{ title: 'text', desc: 'text' }`
@@ -88,11 +96,17 @@ export interface SyncResult {
  * and extra. A collection can hold only one text index, so collapsing them to a single
  * token compares correctly.
  */
-function indexKey(spec: Record<string, unknown>): string {
-	if (Object.values(spec).includes('text') || '_fts' in spec) {
-		return '<text index>';
+function indexKey(spec: Record<string, unknown>, options?: Record<string, unknown>): string {
+	const base = Object.values(spec).includes('text') || '_fts' in spec ? '<text index>' : JSON.stringify(spec);
+
+	const significant: Record<string, unknown> = {};
+	for (const option of SIGNIFICANT_OPTIONS) {
+		if (options?.[option] !== undefined) {
+			significant[option] = options[option];
+		}
 	}
-	return JSON.stringify(spec);
+
+	return Object.keys(significant).length > 0 ? `${base} ${JSON.stringify(significant)}` : base;
 }
 
 /** Only the members needed for inspection, so any concrete Model shape satisfies it. */
@@ -101,12 +115,14 @@ type IndexInspectable = { schema: Schema; collection: Collection };
 async function reportDifferences(model: IndexInspectable, name: string, logger: Logger): Promise<void> {
 	const declared = model.schema
 		.indexes()
-		.map(([spec]: [IndexDefinition, IndexOptions]) => indexKey(spec as Record<string, unknown>));
+		.map(([spec, options]: [IndexDefinition, IndexOptions]) =>
+			indexKey(spec as Record<string, unknown>, options as Record<string, unknown> | undefined),
+		);
 
 	let existing: string[];
 	try {
 		const dbIndexes = await model.collection.indexes();
-		existing = dbIndexes.map((index) => indexKey(index.key as Record<string, unknown>));
+		existing = dbIndexes.map((index) => indexKey(index.key as Record<string, unknown>, index));
 	} catch {
 		// Collection does not exist yet — every declared index counts as missing.
 		logger.log(`${name}: collection does not exist yet; ${declared.length} index(es) would be created`);
