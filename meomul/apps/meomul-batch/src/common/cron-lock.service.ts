@@ -102,9 +102,15 @@ export class CronLockService {
 		const webhookUrl = process.env.BATCH_ALERT_WEBHOOK_URL;
 		if (!webhookUrl) return;
 
+		// Without a timeout a hung webhook host leaves this promise pending forever. It is
+		// fired with `void`, so it never blocks the job — it would simply leak.
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 5000);
+
 		try {
 			await fetch(webhookUrl, {
 				method: 'POST',
+				signal: controller.signal,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					job: jobName,
@@ -115,6 +121,8 @@ export class CronLockService {
 			});
 		} catch {
 			// Never let the webhook failure propagate or crash the worker
+		} finally {
+			clearTimeout(timeout);
 		}
 	}
 }

@@ -95,6 +95,28 @@ Configure with `SMS_PROVIDER`:
 **The API refuses to start in production with `SMS_PROVIDER=log`**, since that would mean
 printing reset codes to stdout while appearing to work.
 
+## Logging
+
+Both apps log newline-delimited JSON in production via pino, and pretty-printed lines in
+development. Existing `new Logger(...)` call sites are unchanged — the logger is swapped
+at bootstrap, so all 54 of them produce structured output automatically.
+
+Every request gets an `x-request-id`, honouring an inbound header if one is present and
+minting one otherwise, and it is echoed back on the response. That id appears on the
+request line and on the GraphQL operation line, so a single request can be followed
+end to end:
+
+```bash
+docker compose -f docker-compose.prod.yml logs api | grep '<request-id>'
+```
+
+Health checks are excluded from request logging — one line per 30s per container, with no
+diagnostic value. Credentials and personal data (`authorization`, `cookie`, `set-cookie`,
+passwords, reset codes, phone numbers, token hashes) are redacted before serialisation, so
+they never reach the output stream.
+
+`LOG_LEVEL` defaults to `info` in production and `debug` locally.
+
 ## Error tracking
 
 Both apps report to Sentry. With no DSN configured the SDKs stay inert, so local

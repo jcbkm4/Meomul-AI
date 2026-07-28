@@ -9,13 +9,16 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { json } from 'express';
 import cookieParser from 'cookie-parser';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './socket/redis-io.adapter';
 import { getUploadsRoot } from './libs/utils/uploads-path';
 
 async function bootstrap() {
 	const logger = new Logger('Bootstrap');
-	const app = await NestFactory.create<NestExpressApplication>(AppModule);
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
+	// Routes every existing `new Logger(...)` call through pino — call sites are unchanged.
+	app.useLogger(app.get(PinoLogger));
 	const isProduction = process.env.NODE_ENV === 'production';
 
 	// Security headers

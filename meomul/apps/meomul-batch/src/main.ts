@@ -3,11 +3,13 @@ import '../../meomul-api/src/instrument';
 
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { MeomulBatchModule } from './meomul-batch.module';
 
 async function bootstrap() {
 	const logger = new Logger('MeomulBatch');
-	const app = await NestFactory.createApplicationContext(MeomulBatchModule);
+	const app = await NestFactory.createApplicationContext(MeomulBatchModule, { bufferLogs: true });
+	app.useLogger(app.get(PinoLogger));
 	app.enableShutdownHooks();
 	logger.log('Meomul Batch worker initialized (scheduler active)');
 
