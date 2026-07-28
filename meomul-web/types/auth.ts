@@ -77,9 +77,27 @@ export interface LogoutMutationData {
   };
 }
 
+export interface RequestPasswordResetInput {
+  memberNick: string;
+  memberPhone: string;
+}
+
+export interface RequestPasswordResetMutationData {
+  requestPasswordReset: {
+    success: boolean;
+    message: string;
+  };
+}
+
+export interface RequestPasswordResetMutationVars {
+  input: RequestPasswordResetInput;
+}
+
 export interface ResetPasswordInput {
   memberNick: string;
   memberPhone: string;
+  /** The 6-digit one-time code delivered by SMS. */
+  code: string;
   newPassword: string;
 }
 

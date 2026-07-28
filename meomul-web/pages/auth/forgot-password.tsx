@@ -3,10 +3,15 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { RESET_PASSWORD_MUTATION } from "@/graphql/auth.gql";
+import {
+  REQUEST_PASSWORD_RESET_MUTATION,
+  RESET_PASSWORD_MUTATION,
+} from "@/graphql/auth.gql";
 import { errorAlert, successAlert } from "@/lib/ui/alerts";
 import { getErrorMessage } from "@/lib/utils/error";
 import type {
+  RequestPasswordResetMutationData,
+  RequestPasswordResetMutationVars,
   ResetPasswordMutationData,
   ResetPasswordMutationVars,
 } from "@/types/auth";
@@ -20,8 +25,14 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
   const [step, setStep] = useState(1);
   const [memberNick, setMemberNick] = useState("");
   const [memberPhone, setMemberPhone] = useState("");
+  const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [requestPasswordReset, { loading: requesting }] = useMutation<
+    RequestPasswordResetMutationData,
+    RequestPasswordResetMutationVars
+  >(REQUEST_PASSWORD_RESET_MUTATION);
 
   const [resetPassword, { loading }] = useMutation<
     ResetPasswordMutationData,
@@ -36,8 +47,8 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
   const description = useMemo(
     () =>
       step === 1
-        ? "Confirm your username and phone number to continue."
-        : "Choose a new password for your account.",
+        ? "We will text a 6-digit code to the phone number on your account."
+        : "Enter the code we sent, then choose a new password.",
     [step],
   );
 
@@ -59,6 +70,11 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
   };
 
   const validatePasswordStep = async () => {
+    if (!/^[0-9]{6}$/.test(code.trim())) {
+      await errorAlert("Check the code", "Enter the 6-digit code from the text message.");
+      return false;
+    }
+
     if (newPassword.length < 6) {
       await errorAlert("Choose a stronger password", "Password must be at least 6 characters.");
       return false;
@@ -80,6 +96,28 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
   const onContinue = async () => {
     const valid = await validateIdentityStep();
     if (!valid) return;
+
+    try {
+      await requestPasswordReset({
+        variables: {
+          input: {
+            memberNick: memberNick.trim(),
+            memberPhone: memberPhone.replace(/-/g, "").trim(),
+          },
+        },
+      });
+    } catch (error) {
+      await errorAlert("Reset password", getErrorMessage(error));
+      return;
+    }
+
+    // The server answers identically whether or not the account exists, so the UI must
+    // not imply one way or the other — saying "we sent a code" to an unknown account is
+    // what stops this page being used to discover who is registered.
+    await successAlert(
+      "Check your messages",
+      "If that account exists, a 6-digit code is on its way. It expires in 15 minutes.",
+    );
     setStep(2);
   };
 
@@ -101,13 +139,17 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
           input: {
             memberNick: memberNick.trim(),
             memberPhone: memberPhone.replace(/-/g, "").trim(),
+            code: code.trim(),
             newPassword,
           },
         },
       });
 
       if (!response.data?.resetPassword.success) {
-        await errorAlert("Reset password", "Password reset could not be completed.");
+        await errorAlert(
+          "Reset password",
+          "That code was not accepted. It may have expired or already been used.",
+        );
         return;
       }
 
@@ -159,9 +201,10 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
               <button
                 type="button"
                 onClick={onContinue}
-                className="inline-flex h-14 w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2d2d2d_0%,#111111_100%)] px-4 text-sm font-semibold text-white transition hover:brightness-110"
+                disabled={requesting}
+                className="inline-flex h-14 w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2d2d2d_0%,#111111_100%)] px-4 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Continue
+                {requesting ? "Sending code..." : "Send code"}
               </button>
             </>
           ) : (
@@ -171,6 +214,20 @@ const ForgotPasswordPage: NextPageWithAuth = () => {
                 {" · "}
                 <span>{memberPhone.trim() || "Phone number"}</span>
               </div>
+
+              <label className="block">
+                <span className="text-sm font-medium text-[#222222]">Verification code</span>
+                <input
+                  value={code}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                  className={fieldClassName}
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="123456"
+                  required
+                />
+              </label>
 
               <label className="block">
                 <span className="text-sm font-medium text-[#222222]">New password</span>

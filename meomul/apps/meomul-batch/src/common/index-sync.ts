@@ -25,6 +25,7 @@ import HotelSchema from '../../../meomul-api/src/schemas/Hotel.model';
 import LikeSchema from '../../../meomul-api/src/schemas/Like.model';
 import MemberSchema from '../../../meomul-api/src/schemas/Member.model';
 import NotificationSchema from '../../../meomul-api/src/schemas/Notification.model';
+import PasswordResetTokenSchema from '../../../meomul-api/src/schemas/PasswordResetToken.model';
 import PriceLockSchema from '../../../meomul-api/src/schemas/PriceLock.model';
 import RecommendationCacheSchema from '../../../meomul-api/src/schemas/RecommendationCache.model';
 import RefreshTokenSchema from '../../../meomul-api/src/schemas/RefreshToken.model';
@@ -53,6 +54,7 @@ export const MODELS: Record<string, Schema> = {
 	Like: LikeSchema,
 	Member: MemberSchema,
 	Notification: NotificationSchema,
+	PasswordResetToken: PasswordResetTokenSchema,
 	PriceLock: PriceLockSchema,
 	RecommendationCache: RecommendationCacheSchema,
 	RefreshToken: RefreshTokenSchema,

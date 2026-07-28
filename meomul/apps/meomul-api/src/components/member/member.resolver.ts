@@ -3,6 +3,7 @@ import { Logger, UnauthorizedException } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthMemberDto } from '../../libs/dto/auth/auth-member';
 import { LoginInput } from '../../libs/dto/auth/login.input';
+import { RequestPasswordResetInput } from '../../libs/dto/auth/request-password-reset.input';
 import { ResetPasswordInput } from '../../libs/dto/auth/reset-password.input';
 import { MemberInput } from '../../libs/dto/member/member.input';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
@@ -23,6 +24,7 @@ import { Throttle } from '@nestjs/throttler';
 import { HostApplicationStatus, MemberType, SubscriptionTier } from '../../libs/enums/member.enum';
 import type { MemberJwtPayload } from '../../libs/types/member';
 import { MemberService } from './member.service';
+import { PasswordResetService } from './password-reset.service';
 
 const REFRESH_TOKEN_COOKIE = 'meomul_rt';
 const REFRESH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -33,7 +35,10 @@ const ACCESS_TOKEN_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes (match JWT_EXPIRES
 export class MemberResolver {
 	private readonly logger = new Logger(MemberResolver.name);
 
-	constructor(private readonly memberService: MemberService) {}
+	constructor(
+		private readonly passwordResetService: PasswordResetService,
+		private readonly memberService: MemberService,
+	) {}
 
 	private getCookieDomain(): string | undefined {
 		if (process.env.NODE_ENV !== 'production') {
@@ -59,54 +64,58 @@ export class MemberResolver {
 		}
 	}
 
-	private setRefreshTokenCookie(res: Response, refreshToken: string): void {
+	/**
+	 * Shared cookie attributes for the auth cookies.
+	 *
+	 * SameSite: when a cookie domain is available, the frontend and API sit on the same
+	 * registrable domain (meomul.com / api.meomul.com), which makes every request between
+	 * them same-site. `lax` is correct there and is strictly safer than `none` — it keeps
+	 * the cookie off genuine cross-site requests, giving useful CSRF resistance, and it is
+	 * unaffected by third-party cookie deprecation.
+	 *
+	 * `none` remains the fallback for a deployment where the two are on unrelated domains,
+	 * since the cookie would otherwise never be sent at all. That configuration is subject
+	 * to third-party cookie blocking and should be avoided.
+	 */
+	private buildCookieOptions(): {
+		httpOnly: true;
+		secure: boolean;
+		sameSite: 'none' | 'lax';
+		path: string;
+		domain?: string;
+	} {
 		const isProduction = process.env.NODE_ENV === 'production';
 		const domain = this.getCookieDomain();
-		res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+
+		return {
 			httpOnly: true,
 			secure: isProduction,
-			sameSite: isProduction ? 'none' : 'lax',
-			maxAge: REFRESH_TOKEN_MAX_AGE_MS,
+			sameSite: isProduction && !domain ? 'none' : 'lax',
 			path: '/',
 			...(domain ? { domain } : {}),
+		};
+	}
+
+	private setRefreshTokenCookie(res: Response, refreshToken: string): void {
+		res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+			...this.buildCookieOptions(),
+			maxAge: REFRESH_TOKEN_MAX_AGE_MS,
 		});
 	}
 
 	private clearRefreshTokenCookie(res: Response): void {
-		const isProduction = process.env.NODE_ENV === 'production';
-		const domain = this.getCookieDomain();
-		res.clearCookie(REFRESH_TOKEN_COOKIE, {
-			httpOnly: true,
-			secure: isProduction,
-			sameSite: isProduction ? 'none' : 'lax',
-			path: '/',
-			...(domain ? { domain } : {}),
-		});
+		res.clearCookie(REFRESH_TOKEN_COOKIE, this.buildCookieOptions());
 	}
 
 	private setAccessTokenCookie(res: Response, accessToken: string): void {
-		const isProduction = process.env.NODE_ENV === 'production';
-		const domain = this.getCookieDomain();
 		res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
-			httpOnly: true,
-			secure: isProduction,
-			sameSite: isProduction ? 'none' : 'lax',
+			...this.buildCookieOptions(),
 			maxAge: ACCESS_TOKEN_MAX_AGE_MS,
-			path: '/',
-			...(domain ? { domain } : {}),
 		});
 	}
 
 	private clearAccessTokenCookie(res: Response): void {
-		const isProduction = process.env.NODE_ENV === 'production';
-		const domain = this.getCookieDomain();
-		res.clearCookie(ACCESS_TOKEN_COOKIE, {
-			httpOnly: true,
-			secure: isProduction,
-			sameSite: isProduction ? 'none' : 'lax',
-			path: '/',
-			...(domain ? { domain } : {}),
-		});
+		res.clearCookie(ACCESS_TOKEN_COOKIE, this.buildCookieOptions());
 	}
 
 	@Mutation(() => AuthMemberDto)
@@ -134,11 +143,35 @@ export class MemberResolver {
 	public async resetPassword(@Args('input') input: ResetPasswordInput): Promise<ResponseDto> {
 		try {
 			this.logger.log('Mutation resetPassword');
-			return this.memberService.resetPassword(input);
+			await this.passwordResetService.resetPassword(input.memberNick, input.memberPhone, input.code, input.newPassword);
+			return { success: true, message: 'Password has been reset. Please sign in with your new password.' };
 		} catch (error) {
 			this.logger.error('Mutation resetPassword failed', error);
 			throw error;
 		}
+	}
+
+	/**
+	 * Step one of recovery: send a one-time code by SMS.
+	 *
+	 * Always reports success, whether or not the account exists — otherwise this endpoint
+	 * becomes a way to enumerate which nickname/phone pairs are registered.
+	 */
+	@Mutation(() => ResponseDto)
+	@Public()
+	@Throttle({ long: { limit: 3, ttl: 60000 } })
+	public async requestPasswordReset(@Args('input') input: RequestPasswordResetInput): Promise<ResponseDto> {
+		try {
+			this.logger.log('Mutation requestPasswordReset');
+			await this.passwordResetService.requestPasswordReset(input.memberNick, input.memberPhone);
+		} catch (error) {
+			// Swallow deliberately: a failure here must not tell the caller anything.
+			this.logger.error('Mutation requestPasswordReset failed', error);
+		}
+		return {
+			success: true,
+			message: 'If that account exists, a reset code has been sent to its phone number.',
+		};
 	}
 
 	@Mutation(() => AuthMemberDto)

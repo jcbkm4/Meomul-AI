@@ -880,6 +880,7 @@ export type Mutation = {
   reassignChat: ChatDto;
   refreshToken: AuthMemberDto;
   requestHostApplication: HostApplicationDto;
+  requestPasswordReset: ResponseDto;
   requestSubscription: ResponseDto;
   resetPassword: ResponseDto;
   respondToReview: ReviewDto;
@@ -1035,6 +1036,11 @@ export type MutationReassignChatArgs = {
 
 export type MutationRequestHostApplicationArgs = {
   input: HostApplicationInput;
+};
+
+
+export type MutationRequestPasswordResetArgs = {
+  input: RequestPasswordResetInput;
 };
 
 
@@ -1650,7 +1656,13 @@ export type RecommendedHotelsV2Dto = {
   meta: RecommendationMetaDto;
 };
 
+export type RequestPasswordResetInput = {
+  memberNick: Scalars['String']['input'];
+  memberPhone: Scalars['String']['input'];
+};
+
 export type ResetPasswordInput = {
+  code: Scalars['String']['input'];
   memberNick: Scalars['String']['input'];
   memberPhone: Scalars['String']['input'];
   newPassword: Scalars['String']['input'];

@@ -73,6 +73,28 @@ Note that `NEXT_PUBLIC_*` variables are inlined into the frontend bundle at **bu
 time, so they are passed as Docker build args — changing them requires a rebuild, not
 just a restart.
 
+## Password recovery and SMS
+
+Members are identified by phone number — there is no email field — so recovery runs over
+SMS. It is a two-step flow: `requestPasswordReset` sends a 6-digit code, and
+`resetPassword` redeems it. Codes are stored only as a SHA-256 hash, are single-use,
+expire in 15 minutes, allow 5 attempts, and a successful reset revokes every refresh
+token for the account.
+
+`requestPasswordReset` always reports success, whether or not the account exists. That is
+deliberate: a distinguishable response would turn it into a way to discover which
+nickname/phone pairs are registered. The UI copy must preserve this — don't "improve" it
+into confirming an account was found.
+
+Configure with `SMS_PROVIDER`:
+
+- `log` — writes the message to the console. Development only.
+- `solapi` — [SOLAPI](https://solapi.com), for Korean domestic SMS. Needs
+  `SOLAPI_API_KEY`, `SOLAPI_API_SECRET`, and `SOLAPI_SENDER`.
+
+**The API refuses to start in production with `SMS_PROVIDER=log`**, since that would mean
+printing reset codes to stdout while appearing to work.
+
 ## Error tracking
 
 Both apps report to Sentry. With no DSN configured the SDKs stay inert, so local
@@ -148,7 +170,6 @@ earlier evaluations. Neither is the active path.
 
 Do not treat `main` as production-ready yet. The tracked blockers:
 
-- `resetPassword` verifies only nickname + phone — no token, no OTP
 - No metrics or tracing (error tracking is wired, but nothing measures throughput/latency)
 - Test coverage is ~2.6%; `booking.service.ts` is untested
 - Socket auth relies on a `SameSite=None` cross-origin cookie, which Safari blocks

@@ -3,11 +3,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import MemberSchema from '../../schemas/Member.model';
 import UserProfileSchema from '../../schemas/UserProfile.model';
 import HostApplicationSchema from '../../schemas/HostApplication.model';
+import PasswordResetTokenSchema from '../../schemas/PasswordResetToken.model';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationModule } from '../notification/notification.module';
 import { RecommendationModule } from '../recommendation/recommendation.module';
 import { MemberResolver } from './member.resolver';
 import { MemberService } from './member.service';
+import { PasswordResetService } from './password-reset.service';
 
 @Module({
 	imports: [
@@ -15,12 +17,13 @@ import { MemberService } from './member.service';
 			{ name: 'Member', schema: MemberSchema },
 			{ name: 'UserProfile', schema: UserProfileSchema },
 			{ name: 'HostApplication', schema: HostApplicationSchema },
+			{ name: 'PasswordResetToken', schema: PasswordResetTokenSchema },
 		]),
 		AuthModule,
 		NotificationModule,
 		RecommendationModule,
 	],
-	providers: [MemberResolver, MemberService],
+	providers: [MemberResolver, MemberService, PasswordResetService],
 	exports: [MemberService],
 })
 export class MemberModule {}

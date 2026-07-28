@@ -17,6 +17,7 @@ import type { Request, Response } from 'express';
 import { AppResolver } from './app.resolver';
 import { ComponentsModule } from './components/components.module';
 import { AuthModule } from './components/auth/auth.module';
+import { SmsModule } from './components/sms/sms.module';
 import { DatabaseModule } from './database/database.module';
 import { SocketModule } from './socket/socket.module';
 import { HealthModule } from './health/health.module';
@@ -30,6 +31,7 @@ import { RolesGuard } from './components/auth/guards/roles.guard';
 	imports: [
 		// Must be first so Sentry's request isolation wraps every other module.
 		SentryModule.forRoot(),
+		SmsModule,
 		CacheModule.registerAsync({
 			isGlobal: true,
 			useFactory: (): CacheOptions => {

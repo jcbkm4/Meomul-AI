@@ -15,6 +15,16 @@ export class ResetPasswordInput {
 	@Field(() => String)
 	memberPhone: string;
 
+	/**
+	 * The one-time code sent by SMS. Required — without it, knowing a nickname and a
+	 * phone number was enough to take over any account.
+	 */
+	@IsNotEmpty()
+	@IsString()
+	@Matches(/^[0-9]{6}$/, { message: 'Reset code must be 6 digits' })
+	@Field(() => String)
+	code: string;
+
 	@IsNotEmpty()
 	@IsString()
 	@Length(6, 100)

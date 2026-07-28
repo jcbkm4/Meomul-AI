@@ -66,6 +66,17 @@ export const LOGOUT_MUTATION = gql`
   }
 `;
 
+/** Step one: ask for a one-time code by SMS. Always reports success. */
+export const REQUEST_PASSWORD_RESET_MUTATION = gql`
+  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+    requestPasswordReset(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
+/** Step two: redeem the code and set the new password. */
 export const RESET_PASSWORD_MUTATION = gql`
   mutation ResetPassword($input: ResetPasswordInput!) {
     resetPassword(input: $input) {

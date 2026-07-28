@@ -855,6 +855,7 @@ type Mutation {
   reassignChat(chatId: String!, newAgentId: String!): ChatDto!
   refreshToken: AuthMemberDto!
   requestHostApplication(input: HostApplicationInput!): HostApplicationDto!
+  requestPasswordReset(input: RequestPasswordResetInput!): ResponseDto!
   requestSubscription(requestedTier: SubscriptionTier!): ResponseDto!
   resetPassword(input: ResetPasswordInput!): ResponseDto!
   respondToReview(responseText: String!, reviewId: String!): ReviewDto!
@@ -1091,7 +1092,13 @@ type RecommendedHotelsV2Dto {
   meta: RecommendationMetaDto!
 }
 
+input RequestPasswordResetInput {
+  memberNick: String!
+  memberPhone: String!
+}
+
 input ResetPasswordInput {
+  code: String!
   memberNick: String!
   memberPhone: String!
   newPassword: String!
