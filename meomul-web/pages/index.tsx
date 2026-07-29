@@ -40,6 +40,7 @@ import type {
   ValuePillar,
 } from "@/types/homepage";
 import styles from "@/styles/home-landing-ovastin.module.css";
+import { LocalizedSeo } from "@/components/seo/localized-seo";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -515,6 +516,7 @@ export default function HomePage({
 
   return (
     <>
+      <LocalizedSeo path="/" />
       <Head>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />

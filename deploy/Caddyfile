@@ -1,3 +1,9 @@
+# Global options. The ACME account email is what Let's Encrypt uses to warn you about
+# expiring certificates and policy changes — without it those notices go nowhere.
+{
+	email {$LETSENCRYPT_EMAIL}
+}
+
 {$APP_DOMAIN} {
   encode zstd gzip
 

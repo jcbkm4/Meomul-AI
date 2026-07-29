@@ -24,6 +24,7 @@ import type {
   GetRoomQueryData,
   GetRoomQueryVars,
 } from "@/types/hotel";
+import { LocalizedSeo } from "@/components/seo/localized-seo";
 
 function RoomBookingSidebarLoader() {
   const { t } = useI18n();
@@ -149,6 +150,7 @@ export default function RoomDetailPage({ initialMetaRoom, initialMetaHotel }: Ro
 
   return (
     <>
+      <LocalizedSeo path={metaRoom ? `/rooms/${metaRoom._id}` : "/rooms"} />
       <Head>
         <title>{roomTitle}</title>
         <meta name="description" content={roomDescription} />

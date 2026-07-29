@@ -41,6 +41,7 @@ import type {
   StartChatMutationData,
   StartChatMutationVars,
 } from "@/types/chat";
+import { LocalizedSeo } from "@/components/seo/localized-seo";
 
 interface HotelDetailPageProps {
   initialHotel: HotelDetailItem | null;
@@ -300,6 +301,7 @@ export default function HotelDetailPage({
 
   return (
     <>
+      <LocalizedSeo path={`/hotels/${hotel._id}`} />
       <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />

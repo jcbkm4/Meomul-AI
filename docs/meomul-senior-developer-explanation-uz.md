@@ -53,7 +53,7 @@
 - 🚀 **Docker Compose** (Local Development + Production)
 - 📦 **NX Monorepo** (Shared libraries)
 - ⚙️ **Caddy** (Reverse Proxy + SSL)
-- 🔄 **Circle CI** (Continuous Integration)
+- 🔄 **GitHub Actions** (Continuous Integration — `.github/workflows/ci.yml`)
 
 ---
 
@@ -73,7 +73,7 @@
 | 10 | **Search Engine** | Location-based, date-range, purpose filtering |
 | 11 | **Strike System** | Hotel quality control va penalty system |
 | 12 | **Price Lock** | 15 minut narx qulflash mexanizmi |
-| 13 | **Instant Refund** | 1 soatlik avtomatik qaytarish |
+| 13 | **Instant Refund** | *(v1 da yo'q — to'lov mehmonxonada amalga oshiriladi)* |
 | 14 | **Photo Upload** | Verified guest photos only |
 | 15 | **Subscription Tiers** | Premium membership benefits |
 | 16 | **Follow System** | User follow/unfollow mexanizmi |
@@ -276,7 +276,7 @@ npm run start:batch
 ### Production Deployment
 **Environment**: Docker Containers + Caddy Reverse Proxy
 - **Backend API**: `meomul-api` service
-- **Frontend**: `meomul-web` (Next.js static export)
+- **Frontend**: `meomul-web` (Next.js standalone server in a container, port 3000)
 - **Database**: MongoDB (cloud hosting)
 - **Redis**: Cache + Session store
 - **Caddy**: SSL/TLS + Load balancing
@@ -397,7 +397,7 @@ meomul/
 - Verified guest photos
 - Real-time chat support
 - Basic search va filtering
-- Payment integration (simulation)
+- To'lov shlyuzi yo'q — mehmonxonada to'lash (pay-at-property). Booking holati kuzatiladi, pul o'tkazilmaydi.
 
 ### Phase 2: Expansion (Months 3-6)
 - Mobile app (React Native)
@@ -430,7 +430,7 @@ meomul/
 
 ### Operational Metrics
 - **Chat Response Time**: <30 seconds
-- **Payment Processing**: <5 seconds
+- **Booking Confirmation**: <5 seconds *(to'lov mehmonxonada, onlayn to'lov yo'q)*
 - **System Uptime**: 99.9%+
 - **Page Load Time**: <2 seconds
 
@@ -470,11 +470,17 @@ Guest completes stay → System sends review request
 → Other users see with "Verified Guest - Stayed March 2026" badge
 ```
 
-### 2. One-Hour Instant Refund
+### 2. One-Hour Instant Refund — *Phase 2 (v1 da yo'q)*
 ```
-Booking within 1 hour of check-in → Guest submits refund request 
-→ System validates discrepancy evidence → Automatic refund processing 
+REJALASHTIRILGAN. Bu oqim to'lov shlyuzini talab qiladi, v1 da esa u yo'q:
+to'lov mehmonxonada amalga oshiriladi, shuning uchun tizim pulni qaytara olmaydi.
+
+Booking within 1 hour of check-in → Guest submits refund request
+→ System validates discrepancy evidence → Automatic refund processing
 → Hotel receives warning strike
+
+v1 da: bekor qilish siyosati (FLEXIBLE / MODERATE / STRICT) bo'yicha
+qaytariladigan summa hisoblanadi va mehmonxona bilan hal qilinadi.
 ```
 
 ### 3. Price Lock Mechanism
@@ -502,7 +508,7 @@ Historical price data → Event-based trend analysis
 | Feature | Yanolja | Booking.com | Airbnb | **MEOMUL** |
 |---------|---------|-------------|--------|-----------|
 | Photo Verification | Mixed | Mixed | Host-dependent | 100% Verified |
-| Refund Speed | 3-7 days | 3-7 days | Flexible | <1 hour |
+| Refund Speed | 3-7 days | 3-7 days | Flexible | *(v1: bekor qilish siyosati bo'yicha, mehmonxonada)* |
 | Price Transparency | Hidden | Minimal | Moderate | 60-day visible |
 | Support Response | Slow | Email-based | Fast | <30 sec chat |
 | Search Intelligence | Basic | Advanced | Moderate | Purpose-based |
@@ -525,17 +531,27 @@ Historical price data → Event-based trend analysis
 - PR reviews before merge
 
 ### Deployment Checklist
-- [ ] All tests passing
-- [ ] GraphQL schema synced
-- [ ] Environment variables set
-- [ ] Database migrations run
-- [ ] Frontend types regenerated
-- [ ] Docker images built
-- [ ] Production config verified
+
+Kod tomonidan bajarilgan:
+- [x] All tests passing — 91 API + 27 web, CI'da `npm test`
+- [x] GraphQL schema synced — `npm run graphql:schema:check`
+- [x] Frontend types regenerated — `npm run codegen:backend-types`
+- [x] Index management — batch worker `RUN_INDEX_SYNC` orqali boot'da yaratadi
+- [x] Docker images built — uchala konteyner non-root, HEALTHCHECK bilan
+- [x] Error tracking — Sentry (API, batch, web)
+- [x] Structured logging — JSON + `x-request-id` korrelyatsiya
+
+Ishga tushirishdan oldin qo'lda bajarish kerak:
+- [ ] Environment variables set — VM'dagi `.env.production` (`deploy-vm.sh` tekshiradi)
+- [ ] Secrets rotated — Atlas paroli va SOLAPI kaliti (`scripts/rotate-secrets.sh`)
+- [ ] DNS + Atlas IP allowlist — `scripts/gcp/README.md`
+- [ ] SMS sender tasdiqlangan — SOLAPI 발신번호
+- [ ] Cancellation policy tasdiqlangan — FLEXIBLE "same day 50%" hozir ishlamaydi
+      (`Math.ceil` sababli har doim 100% qaytariladi; qaror qabul qilinishi kerak)
 
 ---
 
-**Last Updated**: April 9, 2026  
+**Last Updated**: July 2026 (production-readiness pass)  
 **Project Status**: MVP Development (Phase 1)  
 **Team Lead**: Kamil  
-**Repository**: /Users/kamil/Desktop/Personal Project/Meomul
+**Repository**: monorepo — `meomul/` (API + batch), `meomul-web/` (frontend)

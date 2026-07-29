@@ -27,6 +27,7 @@ import type {
   GetHotelsQueryVars,
   HotelListItem,
 } from "@/types/hotel";
+import { LocalizedSeo } from "@/components/seo/localized-seo";
 
 const HotelsFiltersDrawer = dynamic(
   () =>
@@ -159,6 +160,7 @@ export default function HotelsPage({
 
   return (
     <>
+      <LocalizedSeo path="/hotels" withCanonical />
       <Head>
         <title>{t("hotels_meta_title")}</title>
         <meta

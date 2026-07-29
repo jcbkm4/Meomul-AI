@@ -35,6 +35,7 @@ import { useI18n } from "@/lib/i18n/provider";
 import { getSupportCopy } from "@/lib/support/support-i18n";
 import { getErrorMessage } from "@/lib/utils/error";
 import type { NextPageWithAuth } from "@/types/page";
+import { LocalizedSeo } from "@/components/seo/localized-seo";
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    DATA
@@ -186,6 +187,7 @@ const SupportPage: NextPageWithAuth = () => {
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
     <>
+      <LocalizedSeo path="/support" withCanonical />
       <Head>
         <title>{supportCopy.metaTitle}</title>
         <meta
