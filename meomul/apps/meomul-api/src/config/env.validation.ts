@@ -41,7 +41,10 @@ class EnvironmentVariables {
 	@IsOptional()
 	FRONTEND_URL?: string;
 
-	@IsUrl({ require_tld: false })
+	// validator.js only accepts http/https/ftp unless told otherwise, so a redis:// URL
+	// failed here and crash-looped the API on first deploy. require_tld stays false
+	// because Docker service names ("meomul-redis") have no dot.
+	@IsUrl({ require_tld: false, protocols: ['redis', 'rediss'], require_protocol: true })
 	@IsOptional()
 	REDIS_URL?: string;
 
