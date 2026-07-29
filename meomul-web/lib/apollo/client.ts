@@ -128,7 +128,9 @@ export const createApolloClient = (options?: { headers?: Record<string, string> 
       watchQuery: {
         fetchPolicy: "cache-and-network",
         nextFetchPolicy: "cache-and-network",
-        returnPartialData: false,
+        // returnPartialData is omitted rather than set to false. False is already the
+        // default, and from @apollo/client 4.2 declaring it here requires registering
+        // the option through ApolloClient.DeclareDefaultOptions for type safety.
       },
       query: {
         fetchPolicy: "network-only",
