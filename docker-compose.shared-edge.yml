@@ -1,0 +1,104 @@
+# Meomul on a host whose ports 80/443 are already owned by another stack's Caddy.
+#
+# Differences from docker-compose.prod.yml:
+#   - No caddy service, and no published ports. The existing edge proxy terminates TLS
+#     and routes to these containers over the shared Docker network.
+#   - Services are named meomul-* rather than api/frontend/redis. On a shared network the
+#     service name is the DNS alias, so a plain `api` here would collide with the host
+#     stack's own `api` and could silently steal its traffic.
+#
+# Usage:
+#   docker compose -f docker-compose.shared-edge.yml --env-file .env.production up -d --build
+services:
+  meomul-frontend:
+    build:
+      context: ./meomul-web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_GRAPHQL_URL: ${NEXT_PUBLIC_GRAPHQL_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_CHAT_SOCKET_URL: ${NEXT_PUBLIC_CHAT_SOCKET_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_BUILD_ID: ${NEXT_PUBLIC_BUILD_ID}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_GRAPHQL_URL: ${NEXT_PUBLIC_GRAPHQL_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_CHAT_SOCKET_URL: ${NEXT_PUBLIC_CHAT_SOCKET_URL}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_BUILD_ID: ${NEXT_PUBLIC_BUILD_ID}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+      SENTRY_DSN: ${SENTRY_DSN_WEB:-}
+    networks:
+      - edge
+
+  meomul-api:
+    build:
+      context: ./meomul
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env.production
+    environment:
+      NODE_ENV: production
+      PORT_API: 3001
+      SENTRY_DSN: ${SENTRY_DSN_API:-}
+      SENTRY_RELEASE: ${NEXT_PUBLIC_BUILD_ID:-}
+      REDIS_URL: redis://meomul-redis:6379
+    depends_on:
+      meomul-redis:
+        condition: service_healthy
+    volumes:
+      - ./data/uploads:/app/uploads
+    networks:
+      - edge
+
+  meomul-batch:
+    build:
+      context: ./meomul
+      dockerfile: Dockerfile.batch
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env.production
+    environment:
+      NODE_ENV: production
+      PORT_BATCH: 3003
+      SENTRY_DSN: ${SENTRY_DSN_API:-}
+      SENTRY_RELEASE: ${NEXT_PUBLIC_BUILD_ID:-}
+      REDIS_URL: redis://meomul-redis:6379
+      RUN_INDEX_SYNC: ${RUN_INDEX_SYNC:-true}
+    depends_on:
+      meomul-redis:
+        condition: service_healthy
+    networks:
+      - edge
+
+  meomul-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - meomul_redis_data:/data
+    networks:
+      - edge
+
+volumes:
+  meomul_redis_data:
+
+networks:
+  # The network the host stack's Caddy already runs on. Declared external so this
+  # compose file joins it rather than creating anything, and never manages its lifecycle.
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:-mtechlab_mtechlab}

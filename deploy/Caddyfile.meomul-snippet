@@ -1,0 +1,38 @@
+# Meomul site blocks — append to the host stack's Caddyfile (/opt/mtechlab/Caddyfile).
+#
+# Caddy serves multiple sites from one config; adding these does not affect the existing
+# mtechlab.co.kr blocks. `caddy reload` validates the whole file before applying, so a
+# syntax error is rejected rather than taking the running sites down.
+#
+# Targets are the meomul-* service names from docker-compose.shared-edge.yml. They are
+# deliberately distinct from the host stack's `web` and `api` so the two cannot collide
+# on the shared network.
+
+meomul.com {
+	encode zstd gzip
+
+	# Uploaded media is served by the API, not Next.js.
+	@uploads path /uploads/*
+	handle @uploads {
+		reverse_proxy meomul-api:3001
+	}
+
+	handle {
+		reverse_proxy meomul-frontend:3000
+	}
+}
+
+www.meomul.com {
+	redir https://meomul.com{uri} permanent
+}
+
+api.meomul.com {
+	encode zstd gzip
+
+	# Video uploads are capped at 50MB by the API; allow headroom for multipart overhead.
+	request_body {
+		max_size 100MB
+	}
+
+	reverse_proxy meomul-api:3001
+}
