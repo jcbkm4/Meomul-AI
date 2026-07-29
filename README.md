@@ -182,8 +182,13 @@ Compose stack. See [`scripts/gcp/README.md`](scripts/gcp/README.md) for the full
 ```bash
 PROJECT_ID=your-project ./scripts/gcp/create-vm.sh   # once, from your workstation
 sudo bash scripts/gcp/bootstrap-vm.sh                # once, on the VM
+./scripts/gcp/sync-uploads.sh                        # once, from your workstation
 sudo bash scripts/gcp/deploy-vm.sh                   # every deploy
 ```
+
+Follow [`docs/launch-runbook.md`](docs/launch-runbook.md) for the full first-launch
+sequence — DNS and the Atlas IP allowlist have to be in place before deploying, and
+skipping either produces failures that look like code faults.
 
 `scripts/digitalocean/` and `scripts/azure/` hold scripts for those providers from
 earlier evaluations. Neither is the active path.
