@@ -102,7 +102,15 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        // `locale: false` is essential here. With i18n enabled Next rewrites a plain
+        // source into `/:nextInternalLocale(en|ko|ru|uz)/(.*)`, whose regex demands both
+        // a locale segment and a non-empty path after it. That silently excluded `/`,
+        // `/ko`, `/ru` and `/uz` — the homepage in every language was served with no CSP,
+        // no HSTS and no X-Frame-Options, while inner pages like /hotels were covered.
+        //
+        // `/:path*` with locale matching disabled matches the bare root as well.
+        source: "/:path*",
+        locale: false,
         headers: [
           {
             key: "X-Frame-Options",
@@ -147,7 +155,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.meomul.com",
+        hostname: "**.meomul.dev",
       },
       {
         protocol: "https",
