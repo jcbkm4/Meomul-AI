@@ -11,6 +11,9 @@
 #   docker compose -f docker-compose.shared-edge.yml --env-file .env.production up -d --build
 services:
   meomul-frontend:
+    # With both `image` and `build`, `compose build` tags the result as this name and
+    # `compose pull` fetches it. That lets CI build off-host and the VM just pull.
+    image: ${MEOMUL_IMAGE_PREFIX:-meomul}/frontend:${MEOMUL_IMAGE_TAG:-local}
     build:
       context: ./meomul-web
       dockerfile: Dockerfile
@@ -37,6 +40,7 @@ services:
       - edge
 
   meomul-api:
+    image: ${MEOMUL_IMAGE_PREFIX:-meomul}/api:${MEOMUL_IMAGE_TAG:-local}
     build:
       context: ./meomul
       dockerfile: Dockerfile
@@ -59,6 +63,7 @@ services:
       - edge
 
   meomul-batch:
+    image: ${MEOMUL_IMAGE_PREFIX:-meomul}/batch:${MEOMUL_IMAGE_TAG:-local}
     build:
       context: ./meomul
       dockerfile: Dockerfile.batch

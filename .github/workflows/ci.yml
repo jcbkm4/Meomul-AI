@@ -88,3 +88,122 @@ jobs:
       - name: Security audit
         run: npm audit --audit-level=high
         continue-on-error: true
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Continuous deployment.
+  #
+  # Runs only after both test jobs pass, and only on a push to main — a red build
+  # cannot reach production, and pull requests never deploy.
+  #
+  # Images are built here rather than on the VM. That host also runs an unrelated
+  # production stack, and `next build` was competing with it for memory; building in
+  # CI removes that contention and turns a deploy into a pull plus a restart.
+  #
+  # Authentication is keyless via Workload Identity Federation, scoped to this
+  # repository. There is no service-account key stored in GitHub — which matters
+  # because this repository is public.
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to production
+    needs: [api, web]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      # Never let two deploys build or restart the stack at the same time.
+      group: production-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write        # required to mint the OIDC token WIF exchanges
+    env:
+      PROJECT_ID: mtechlab-production
+      REGION: asia-northeast3
+      ZONE: asia-northeast3-a
+      VM_NAME: mtechlab-vm
+      APP_DIR: /opt/meomul
+      REGISTRY: asia-northeast3-docker.pkg.dev/mtechlab-production/meomul
+      APP_DOMAIN: meomul.dev
+      API_DOMAIN: api.meomul.dev
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/1076838975607/locations/global/workloadIdentityPools/github/providers/meomul
+          service_account: github-deploy-meomul@mtechlab-production.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push images
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_SHA::12}"
+          echo "IMAGE_TAG=${TAG}" >> "$GITHUB_ENV"
+
+          # NEXT_PUBLIC_* are inlined into the bundle at build time, so they must be
+          # correct here — they cannot be fixed later by restarting the container.
+          docker build \
+            --build-arg NEXT_PUBLIC_GRAPHQL_URL="https://${API_DOMAIN}/graphql" \
+            --build-arg NEXT_PUBLIC_API_URL="https://${API_DOMAIN}" \
+            --build-arg NEXT_PUBLIC_CHAT_SOCKET_URL="https://${API_DOMAIN}" \
+            --build-arg NEXT_PUBLIC_SITE_URL="https://${APP_DOMAIN}" \
+            --build-arg NEXT_PUBLIC_BUILD_ID="${TAG}" \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}" \
+            -t "${REGISTRY}/frontend:${TAG}" -t "${REGISTRY}/frontend:latest" \
+            ./meomul-web
+
+          docker build -f ./meomul/Dockerfile       -t "${REGISTRY}/api:${TAG}"   -t "${REGISTRY}/api:latest"   ./meomul
+          docker build -f ./meomul/Dockerfile.batch -t "${REGISTRY}/batch:${TAG}" -t "${REGISTRY}/batch:latest" ./meomul
+
+          docker push --all-tags "${REGISTRY}/frontend"
+          docker push --all-tags "${REGISTRY}/api"
+          docker push --all-tags "${REGISTRY}/batch"
+
+      - name: Deploy to the VM
+        run: |
+          set -euo pipefail
+          # A short-lived token for the VM's docker login. The VM's own service account
+          # lacks the Artifact Registry scope, and changing instance scopes requires a
+          # stop — which would mean downtime for the unrelated stack on the same host.
+          AR_TOKEN="$(gcloud auth print-access-token)"
+
+          gcloud compute ssh "${VM_NAME}" --project "${PROJECT_ID}" --zone "${ZONE}" --tunnel-through-iap=false --quiet --command "
+            set -euo pipefail
+            cd ${APP_DIR}
+            sudo git fetch --depth 50 origin main && sudo git reset --hard origin/main
+
+            echo '${AR_TOKEN}' | sudo docker login -u oauth2accesstoken --password-stdin https://${REGION}-docker.pkg.dev
+
+            sudo sed -i 's|^NEXT_PUBLIC_BUILD_ID=.*|NEXT_PUBLIC_BUILD_ID=${IMAGE_TAG}|' .env.production
+
+            export MEOMUL_IMAGE_PREFIX='${REGISTRY}'
+            export MEOMUL_IMAGE_TAG='${IMAGE_TAG}'
+            sudo -E docker compose -f docker-compose.shared-edge.yml --env-file .env.production pull
+            sudo -E docker compose -f docker-compose.shared-edge.yml --env-file .env.production up -d --no-build
+
+            sudo docker logout https://${REGION}-docker.pkg.dev || true
+          "
+
+      - name: Verify the deployment
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            health=$(curl -sS --max-time 10 "https://${API_DOMAIN}/health" || true)
+            site=$(curl -sI --max-time 10 -o /dev/null -w '%{http_code}' "https://${APP_DOMAIN}" || true)
+            echo "attempt $i — api: ${health:-none} | site: ${site:-none}"
+            if echo "$health" | grep -q '"status":"ok"' && [ "$site" = "200" ]; then
+              echo "deployment verified"
+              # The neighbouring production site must be unaffected by our deploy.
+              neighbour=$(curl -sI --max-time 10 -o /dev/null -w '%{http_code}' https://mtechlab.co.kr || true)
+              echo "mtechlab.co.kr: ${neighbour}"
+              [ "$neighbour" = "200" ] || { echo "::error::neighbouring site is not healthy"; exit 1; }
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::deployment did not become healthy"
+          exit 1
