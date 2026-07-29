@@ -24,10 +24,17 @@ fi
 # read here than in container logs.
 echo "==> Checking required environment variables"
 missing=()
+placeholder=()
 while read -r key; do
   [[ -z "${key}" ]] && continue
   if ! grep -qE "^${key}=.+" .env.production; then
     missing+=("${key}")
+  # A non-empty value is not necessarily a real one. The prepared .env.production ships
+  # REPLACE_ markers for the secrets that must be rotated first, and those would
+  # otherwise pass an is-it-set check and fail later as an auth error against Atlas or
+  # SOLAPI — far from the cause.
+  elif grep -qE "^${key}=.*REPLACE" .env.production; then
+    placeholder+=("${key}")
   fi
 done <<'KEYS'
 APP_DOMAIN
@@ -51,6 +58,14 @@ KEYS
 if [[ ${#missing[@]} -gt 0 ]]; then
   echo "ERROR: these are unset or empty in .env.production:"
   printf '  - %s\n' "${missing[@]}"
+  exit 1
+fi
+
+if [[ ${#placeholder[@]} -gt 0 ]]; then
+  echo "ERROR: these still hold REPLACE_ placeholders in .env.production:"
+  printf '  - %s\n' "${placeholder[@]}"
+  echo
+  echo "Rotate them first — see docs/launch-runbook.md step 1."
   exit 1
 fi
 
