@@ -954,7 +954,7 @@ export class BookingService {
 
 	/**
 	 * Guest cancellation policy by hotel:
-	 * - FLEXIBLE: >= 1 day => 100%, same day => 50%
+	 * - FLEXIBLE: check-in on a later calendar day => 100%, same calendar day => 50%
 	 * - MODERATE: > 7 days => 100%, 3-7 days => 50%, < 3 days => 0%
 	 * - STRICT: > 14 days => 100%, 7-14 days => 50%, < 7 days => 0%
 	 */
@@ -968,10 +968,18 @@ export class BookingService {
 		const daysUntilCheckIn = Math.ceil((checkInDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
 		if (policy === CancellationPolicy.FLEXIBLE) {
-			if (daysUntilCheckIn >= 1) {
-				return booking.paidAmount;
-			}
-			return Math.round(booking.paidAmount * 0.5);
+			// "Same day" has to be a calendar comparison, not a duration one. Using
+			// daysUntilCheckIn here made the tier unreachable: Math.ceil rounds any
+			// still-future check-in up to at least 1, and guest cancellation is blocked
+			// once check-in has passed, so the >= 1 branch always won and a cancellation
+			// an hour before check-in was refunded in full.
+			//
+			// MODERATE and STRICT deliberately keep using daysUntilCheckIn below. Switching
+			// them to calendar days would shift every one of their boundaries by about a
+			// day and change refund amounts that were not in question here.
+			const isSameCalendarDay = this.normalizeToUtcDay(checkInDate).getTime() === this.normalizeToUtcDay(now).getTime();
+
+			return isSameCalendarDay ? Math.round(booking.paidAmount * 0.5) : booking.paidAmount;
 		}
 
 		if (policy === CancellationPolicy.STRICT) {

@@ -53,6 +53,12 @@ history is not misleading:
   and ignored options. Now folds in `unique`, `expireAfterSeconds`,
   `partialFilterExpression` and `sparse`.
 - Four stale indexes pruned; three TTL indexes whose options had drifted were corrected.
+- **FLEXIBLE's documented "same day = 50%" tier was unreachable.** `Math.ceil` on
+  days-until-check-in rounded any still-future check-in up to at least 1, so guests
+  cancelling an hour before check-in were refunded in full. Now a calendar-day
+  comparison. MODERATE and STRICT deliberately keep the duration-based calculation —
+  switching them would have shifted every boundary by about a day and changed refund
+  amounts that were not in question.
 
 ### Operability
 - MongoDB index management, run by the batch worker at boot (`RUN_INDEX_SYNC`), plus a
@@ -81,10 +87,9 @@ history is not misleading:
 | Item | Why it is not done |
 |---|---|
 | **Rotate Atlas password and SOLAPI secret** | Both were pasted into a chat transcript and must be considered disclosed. `scripts/rotate-secrets.sh` handles the app secrets; these two live in consoles only you can reach. The SOLAPI secret can only be invalidated by regenerating it. |
-| **FLEXIBLE same-day 50% refund tier** | `Math.ceil` on days-until-check-in means any future check-in rounds to at least 1, so the documented "same day = 50%" never applies and guests are refunded in full an hour before check-in. Changing it moves money; that is a product decision, not a bug fix. Current behaviour is pinned by a test either way. |
-| **Split the i18n catalog per locale** | Measured at 144.8 KB raw / 35.7 KB gzipped, with ~19 KB gzipped wasted per user. The provider needs messages synchronously for SSR and 34 of 40 pages are client-rendered, so a dynamic import means non-English users see an English flash. Recommendation: not worth it at this stage. |
+| **Split the i18n catalog per locale** | Measured at 144.8 KB raw / 35.7 KB gzipped, with ~19 KB gzipped wasted per user. The provider needs messages synchronously for SSR and 34 of 40 pages are client-rendered, so a dynamic import means non-English users see an English flash. Reviewed and deliberately not done. |
 | **Uploads on the boot disk** | Works on a single VM, which is the current target, but caps the API at one instance. Moving to Cloud Storage is the prerequisite for scaling out. |
-| **Dev and production share one database** | `MONGO_DEV` and `MONGO_PROD` both point at `Meomul`. Every local run reads and writes live customer data. Left as-is at your direction; note that with `NODE_ENV=production` locally, `autoIndex` is off, so schema index changes now need `npm run indexes:sync`. |
+| **Dev and production share one database** | `MONGO_DEV` and `MONGO_PROD` both point at `Meomul`. Every local run reads and writes live customer data. Confirmed intentional and kept; note that with `NODE_ENV=production` locally, `autoIndex` is off, so schema index changes now need `npm run indexes:sync`. |
 | **Remaining `npm audit` highs** | Dev tooling only, or the sole offered "fix" is a major downgrade (`@nestjs/apollo` 13→10). Audit is `continue-on-error` in CI rather than permanently red. |
 
 ## Known deferred debt

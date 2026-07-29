@@ -80,19 +80,48 @@ describe('BookingService', () => {
 				);
 			});
 
-			// The documented policy is "same day => 50%", but daysUntilCheckIn is computed
-			// with Math.ceil, so any check-in still in the future rounds up to at least 1
-			// and takes the full-refund branch. Combined with
-			// ensureGuestCancellationBeforeCheckIn — which blocks cancelling once check-in
-			// has passed — the 50% branch is unreachable for guests.
+			// The same-day tier is a calendar comparison, not a duration one. It previously
+			// used Math.ceil on days-until-check-in, which rounded any still-future check-in
+			// up to at least 1 and made the 50% branch unreachable.
 			//
-			// This test pins the behaviour that actually ships. If the half-refund tier is
-			// meant to apply, the day calculation needs to change, not this expectation.
-			it('refunds in full even hours before check-in, despite the documented 50% tier', () => {
-				const service = createService();
-				const twelveHoursOut = createBooking(0.5);
+			// The clock is pinned for these two: the distinction is "which calendar day",
+			// so a suite running near midnight would otherwise give different answers.
+			describe('same-day boundary, with the clock pinned to 2026-03-15T08:00Z', () => {
+				const withPinnedClock = (fn: () => void) => {
+					jest.useFakeTimers().setSystemTime(new Date('2026-03-15T08:00:00.000Z'));
+					try {
+						fn();
+					} finally {
+						jest.useRealTimers();
+					}
+				};
 
-				expect(service.calculateGuestRefundAmount(twelveHoursOut, CancellationPolicy.FLEXIBLE)).toBe(100000);
+				const bookingCheckingInAt = (iso: string): BookingDocument =>
+					({
+						checkInDate: new Date(iso),
+						paidAmount: 100000,
+						paymentStatus: PaymentStatus.PAID,
+					}) as unknown as BookingDocument;
+
+				it('halves the refund when check-in is later the same calendar day', () => {
+					withPinnedClock(() => {
+						const service = createService();
+						// 15 hours away, but still 15 March.
+						const booking = bookingCheckingInAt('2026-03-15T23:00:00.000Z');
+
+						expect(service.calculateGuestRefundAmount(booking, CancellationPolicy.FLEXIBLE)).toBe(50000);
+					});
+				});
+
+				it('refunds in full when check-in is the next day, however few hours away', () => {
+					withPinnedClock(() => {
+						const service = createService();
+						// Only 17 hours away — less than a day — but a different calendar day.
+						const booking = bookingCheckingInAt('2026-03-16T01:00:00.000Z');
+
+						expect(service.calculateGuestRefundAmount(booking, CancellationPolicy.FLEXIBLE)).toBe(100000);
+					});
+				});
 			});
 		});
 

@@ -546,8 +546,8 @@ Ishga tushirishdan oldin qo'lda bajarish kerak:
 - [ ] Secrets rotated — Atlas paroli va SOLAPI kaliti (`scripts/rotate-secrets.sh`)
 - [ ] DNS + Atlas IP allowlist — `scripts/gcp/README.md`
 - [ ] SMS sender tasdiqlangan — SOLAPI 발신번호
-- [ ] Cancellation policy tasdiqlangan — FLEXIBLE "same day 50%" hozir ishlamaydi
-      (`Math.ceil` sababli har doim 100% qaytariladi; qaror qabul qilinishi kerak)
+- [x] Cancellation policy — FLEXIBLE "same day 50%" endi ishlaydi (kalendar kuni
+      bo'yicha solishtiriladi). MODERATE/STRICT chegaralari o'zgarmadi.
 
 ---
 
