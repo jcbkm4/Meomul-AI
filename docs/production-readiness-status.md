@@ -18,7 +18,7 @@ history is not misleading:
   automatically. The index tooling is still required — it is what keeps indexes correct
   once `NODE_ENV=production` disables `autoIndex` — but the alarm was not accurate.
 - *"Safari will block the auth cookie, breaking chat."* False. `getCookieDomain()` already
-  derives `meomul.com` from `FRONTEND_URL`, and `api.meomul.com` shares that registrable
+  derives `meomul.dev` from `FRONTEND_URL`, and `api.meomul.dev` shares that registrable
   domain, so the cookie is first-party and ITP does not apply. The real improvement was
   narrower: `SameSite` was unconditionally `none`, and is now `lax` whenever a cookie
   domain is derivable.

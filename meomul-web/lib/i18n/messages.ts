@@ -902,7 +902,7 @@ const en: MessageDictionary = {
   about_contact_title: "Need clarification on how Meomul works?",
   about_contact_desc:
     "Our team is available for account, booking, payment, or operation questions.",
-  about_contact_email: "support@meomul.com",
+  about_contact_email: "support@meomul.dev",
   about_contact_open: "Open support chat",
   locale_switcher_label: "Language",
   home_meta_title: "Meomul | Book the right stay for every trip",
@@ -1761,7 +1761,7 @@ const ko: MessageDictionary = {
   about_contact_title: "Meomul의 운영 방식이 더 궁금하신가요?",
   about_contact_desc:
     "계정, 결제, 예약, 운영 관련 문의를 빠르게 지원해 드립니다.",
-  about_contact_email: "support@meomul.com",
+  about_contact_email: "support@meomul.dev",
   about_contact_open: "지원 채팅 열기",
   locale_switcher_label: "언어",
   home_meta_title: "Meomul | 모든 여행에 맞는 숙소를 예약하세요",
@@ -2169,7 +2169,7 @@ const ru: MessageDictionary = {
   about_contact_eyebrow: "Поддержка",
   about_contact_title: "Нужны уточнения по работе платформы?",
   about_contact_desc: "Ответим по вопросам аккаунта, оплаты, бронирования и технической помощи.",
-  about_contact_email: "support@meomul.com",
+  about_contact_email: "support@meomul.dev",
   about_contact_open: "Открыть чат поддержки",
   locale_switcher_label: "Язык",
   home_meta_title: "Meomul | Бронируйте правильное размещение для любой поездки",
@@ -2588,7 +2588,7 @@ const uz: MessageDictionary = {
   about_contact_title: "Meomul ishlash usuli haqida ma'lumot kerakmi?",
   about_contact_desc:
     "Hisob qaydnomasi, to'lov, bronlash va texnik masalalar bo'yicha yordam beramiz.",
-  about_contact_email: "support@meomul.com",
+  about_contact_email: "support@meomul.dev",
   about_contact_open: "Yordam chatini ochish",
   locale_switcher_label: "Til",
   home_meta_title: "Meomul | Har bir safar uchun to'g'ri turar joyni bron qiling",

@@ -8,10 +8,15 @@
 #
 set -euo pipefail
 
+# COMPOSE_FILE selects the topology:
+#   docker-compose.prod.yml         dedicated host — Meomul brings its own Caddy on 80/443
+#   docker-compose.shared-edge.yml  shared host — an existing proxy already owns 80/443
 APP_DIR="${APP_DIR:-/srv/meomul}"
-COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.production"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE="docker compose -f ${COMPOSE_FILE} --env-file .env.production"
 
 cd "${APP_DIR}"
+echo "==> ${APP_DIR} using ${COMPOSE_FILE}"
 
 if [[ ! -f .env.production ]]; then
   echo "ERROR: .env.production is missing in ${APP_DIR}"
@@ -75,7 +80,8 @@ mkdir -p data/uploads
 chown -R 1000:1000 data/uploads
 
 echo "==> Pulling base images"
-${COMPOSE} pull caddy redis || true
+# --ignore-buildable so this does not try to pull the images built from this repo.
+${COMPOSE} pull --ignore-buildable 2>/dev/null || true
 
 echo "==> Building and starting"
 ${COMPOSE} up -d --build

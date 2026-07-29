@@ -8,7 +8,7 @@
 # deliberately distinct from the host stack's `web` and `api` so the two cannot collide
 # on the shared network.
 
-meomul.com {
+meomul.dev {
 	encode zstd gzip
 
 	# Uploaded media is served by the API, not Next.js.
@@ -22,11 +22,11 @@ meomul.com {
 	}
 }
 
-www.meomul.com {
-	redir https://meomul.com{uri} permanent
+www.meomul.dev {
+	redir https://meomul.dev{uri} permanent
 }
 
-api.meomul.com {
+api.meomul.dev {
 	encode zstd gzip
 
 	# Video uploads are capped at 50MB by the API; allow headroom for multipart overhead.

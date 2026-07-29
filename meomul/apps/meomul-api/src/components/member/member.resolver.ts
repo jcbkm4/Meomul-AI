@@ -68,7 +68,7 @@ export class MemberResolver {
 	 * Shared cookie attributes for the auth cookies.
 	 *
 	 * SameSite: when a cookie domain is available, the frontend and API sit on the same
-	 * registrable domain (meomul.com / api.meomul.com), which makes every request between
+	 * registrable domain (meomul.dev / api.meomul.dev), which makes every request between
 	 * them same-site. `lax` is correct there and is strictly safer than `none` — it keeps
 	 * the cookie off genuine cross-site requests, giving useful CSRF resistance, and it is
 	 * unaffected by third-party cookie deprecation.
