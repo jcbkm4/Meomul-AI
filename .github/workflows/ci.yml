@@ -171,7 +171,11 @@ jobs:
           # stop — which would mean downtime for the unrelated stack on the same host.
           AR_TOKEN="$(gcloud auth print-access-token)"
 
-          gcloud compute ssh "${VM_NAME}" --project "${PROJECT_ID}" --zone "${ZONE}" --tunnel-through-iap=false --quiet --command "
+          # No IAP tunnel: the instance has a public IP and the firewall permits SSH.
+          # A fresh runner has no known_hosts, so host-key checking is disabled for this
+          # one-shot connection to a known instance.
+          gcloud compute ssh "${VM_NAME}" --project "${PROJECT_ID}" --zone "${ZONE}" \
+            --quiet --strict-host-key-checking=no --command "
             set -euo pipefail
             cd ${APP_DIR}
             sudo git fetch --depth 50 origin main && sudo git reset --hard origin/main
