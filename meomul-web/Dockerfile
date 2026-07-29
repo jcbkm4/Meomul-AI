@@ -34,6 +34,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
+# The standalone server binds to $HOSTNAME, and Docker sets that to the container ID.
+# Left alone it listens only on the container's own IP, so the proxy can reach it but
+# nothing on loopback can — which silently breaks the HEALTHCHECK below.
+ENV HOSTNAME=0.0.0.0
 
 ARG NEXT_PUBLIC_GRAPHQL_URL
 ARG NEXT_PUBLIC_API_URL
