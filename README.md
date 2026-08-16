@@ -53,8 +53,15 @@ GraphQL types for the frontend are generated from the backend schema:
 **not** inside Docker — the generated `types/backend-dtos.generated.ts` is committed, so
 regenerate and commit it whenever the API schema changes.
 
-CI (`.github/workflows/ci.yml`) runs lint → test → build → `npm audit` on push to
-`main`/`develop` and on PRs to `main`.
+CI (`.github/workflows/ci.yml`) runs lint → typecheck → test → build → `npm audit` on
+push to `main`/`develop` and on PRs to `main`.
+
+**Deployment is continuous.** A push to `main` that passes both test jobs builds the
+images in CI, pushes them to Artifact Registry, and updates the production VM — then
+verifies the site and API came back healthy before the job goes green. Images are built
+off-host deliberately: the VM shares memory with an unrelated production stack.
+Authentication uses Workload Identity Federation, so no cloud credential is stored in
+this repository.
 
 ## Environment
 

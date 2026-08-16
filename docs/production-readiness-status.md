@@ -71,6 +71,13 @@ history is not misleading:
 - Google Cloud deploy path (`scripts/gcp/`) — VM creation, bootstrap, and a deploy script
   that refuses to start on a missing variable and waits for containers to report healthy.
 
+### Delivery
+- **Continuous deployment.** Push to `main` → CI → build and push images → update the VM →
+  verify health, including asserting the co-hosted `mtechlab.co.kr` still serves. Keyless
+  auth via Workload Identity Federation scoped to this repository; the deploy service
+  account holds only `artifactregistry.writer`, `compute.viewer`, and OS Login on the one
+  instance. Rollback is re-deploying a previous image tag rather than a rebuild.
+
 ### Quality
 - Tests: **13 → 91** on the API, covering refund maths across every policy boundary, the
   booking status machine, refresh-token handling, the cron lock, and password reset.

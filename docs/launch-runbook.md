@@ -17,32 +17,42 @@ its Caddyfile in step 4 — and it is reversible.
 
 ---
 
+> **Status: this setup is complete and the site is live.** Steps 1–7 are kept as the
+> record of how production was built and what to repeat if it is ever rebuilt. For
+> day-to-day work go straight to [Redeploying](#redeploying) — deploys are automatic now.
+
 ## 0. Prerequisites
 
 - [x] Atlas password rotated, connection verified against the `Meomul` database
 - [x] SOLAPI secret regenerated; sender `01059570418` approved
 - [x] `.env.production` complete — no `REPLACE_` placeholders
 - [x] Repo pushed, CI green
-- [ ] **Cloudflare proxy disabled** — see step 1
-- [ ] Atlas Network Access includes `34.50.43.73`
+- [x] DNS serving `34.50.43.73` directly, no proxy in front
+- [x] Atlas Network Access includes `34.50.43.73`
 
 ---
 
-## 1. DNS — turn off the Cloudflare proxy
+## 1. DNS — point straight at the VM
 
-`meomul.dev` is on Cloudflare with the proxy enabled, which currently returns HTTP 521.
-Caddy validates certificates over HTTP-01, and Cloudflare intercepts that, so issuance
-would fail.
-
-In Cloudflare → DNS, set both records to **DNS only** (grey cloud, not orange):
+DNS is served by **name.com** (nameservers `ns1hwy`/`ns2dqr`/`ns3gmv`/`ns4kmw.name.com`),
+with three A records:
 
 ```
-meomul.dev        A    34.50.43.73    DNS only
-api.meomul.dev    A    34.50.43.73    DNS only
+@      A    34.50.43.73
+api    A    34.50.43.73
+www    A    34.50.43.73
 ```
 
-This matches how `mtechlab.co.kr` already works on this host. Confirm before continuing —
-both must return the VM's address, not a Cloudflare one:
+Cloudflare was tried first and removed. With its proxy enabled the site returned HTTP 521
+and, more importantly, Cloudflare intercepts the HTTP-01 challenge Caddy uses, so
+certificate issuance fails. Nothing here needs a CDN in front, and going direct matches
+how `mtechlab.co.kr` already works on this host.
+
+The `www` record matters: the Caddyfile defines a `www.meomul.dev` redirect, and Caddy
+requests a certificate for every configured hostname at startup — a name that does not
+resolve produces repeated failures and burns Let's Encrypt rate limit.
+
+Confirm both resolve to the VM, not to an intermediary:
 
 ```bash
 dig +short meomul.dev api.meomul.dev      # expect 34.50.43.73 for both
@@ -193,15 +203,40 @@ In a browser:
 
 ## Redeploying
 
+**Deploys are automatic.** Pushing to `main` runs CI, and if both test jobs pass, the
+deploy job builds images, pushes them to Artifact Registry, and updates the VM. No manual
+step, and nothing reaches production on a red build.
+
+Watch a deploy:
+
 ```bash
+gh run watch          # or: gh run list --limit 3
+```
+
+The workflow bumps `NEXT_PUBLIC_BUILD_ID` to the commit SHA on the VM, so the Apollo
+cache key changes on every deploy without anyone remembering to do it.
+
+**Rolling back** to any previously built commit — images are retained by tag, so this is
+a pull rather than a rebuild:
+
+```bash
+# On the VM
 cd /opt/meomul
-sudo git pull
-sudo sed -i "s/^NEXT_PUBLIC_BUILD_ID=.*/NEXT_PUBLIC_BUILD_ID=deploy-$(date +%Y%m%d%H%M)/" .env.production
+TAG=<12-char commit sha>
+sudo env MEOMUL_IMAGE_PREFIX=asia-northeast3-docker.pkg.dev/mtechlab-production/meomul \
+         MEOMUL_IMAGE_TAG=$TAG \
+  docker compose -f docker-compose.shared-edge.yml --env-file .env.production up -d --no-build
+```
+
+**Manual deploy** (if CI is unavailable) still works — it builds on the VM:
+
+```bash
+cd /opt/meomul && sudo git pull
 sudo COMPOSE_FILE=docker-compose.shared-edge.yml APP_DIR=/opt/meomul bash scripts/gcp/deploy-vm.sh
 ```
 
-Always bump `NEXT_PUBLIC_BUILD_ID` — it is inlined into the bundle and is the cache key
-for the persisted Apollo cache, so leaving it serves returning users pre-deploy data.
+Note this builds on the production host and competes for memory with the MTechLab stack,
+which is the situation CD exists to avoid. Prefer pushing to `main`.
 
 ---
 
