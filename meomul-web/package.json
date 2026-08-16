@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "codegen:backend-types": "graphql-codegen --config codegen.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lock:refresh": "rm -rf node_modules package-lock.json && npm install"
   },
   "dependencies": {
     "@apollo/client": "^4.1.5",

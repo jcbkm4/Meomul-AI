@@ -47,6 +47,25 @@ outside the repo and is **not** in this one. Do not re-add nested `.git` directo
   that way — it's the main quality invariant here.
 - All 4 locales ship in `lib/i18n/messages.ts`. Add user-facing strings there, not inline.
 
+## Adding or upgrading a dependency
+
+Run `npm run lock:refresh` in that app afterwards, then commit the regenerated lockfile.
+
+`npm install <pkg>` on macOS prunes the platform-specific optional dependencies that the
+Linux CI runner needs — notably the `@emnapi/*` and `*-wasm32-wasi` entries — producing a
+lockfile that installs fine locally and fails `npm ci` in CI with
+"Missing: @emnapi/core@… from lock file". This has bitten twice. A full regeneration
+records the complete graph.
+
+Verify the way CI does, against only the manifest files rather than a populated
+node_modules:
+
+```bash
+rm -rf /tmp/lockcheck && mkdir -p /tmp/lockcheck
+cp package.json package-lock.json /tmp/lockcheck/
+(cd /tmp/lockcheck && npm ci)
+```
+
 ## Conventions
 
 - Branches: `feat/`, `fix/`, `refactor/`. PR review before merging to `main`.

@@ -25,7 +25,8 @@
     "test:e2e": "jest --config ./apps/meomul-api/test/jest-e2e.json",
     "indexes:sync": "ts-node -r tsconfig-paths/register apps/meomul-batch/src/scripts/sync-indexes.ts",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lock:refresh": "rm -rf node_modules package-lock.json && npm install"
   },
   "dependencies": {
     "@apollo/server": "^5.4.0",
