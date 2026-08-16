@@ -184,10 +184,12 @@ jobs:
 
             sudo sed -i 's|^NEXT_PUBLIC_BUILD_ID=.*|NEXT_PUBLIC_BUILD_ID=${IMAGE_TAG}|' .env.production
 
-            export MEOMUL_IMAGE_PREFIX='${REGISTRY}'
-            export MEOMUL_IMAGE_TAG='${IMAGE_TAG}'
-            sudo -E docker compose -f docker-compose.shared-edge.yml --env-file .env.production pull
-            sudo -E docker compose -f docker-compose.shared-edge.yml --env-file .env.production up -d --no-build
+            # Pass the image variables directly to sudo rather than using -E. With -E,
+            # sudo keeps the calling user's HOME, so docker looks for credentials in
+            # ~/.docker/config.json while 'sudo docker login' wrote them to
+            # /root/.docker/config.json — and the pull comes back unauthenticated.
+            sudo env MEOMUL_IMAGE_PREFIX=${REGISTRY} MEOMUL_IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.shared-edge.yml --env-file .env.production pull
+            sudo env MEOMUL_IMAGE_PREFIX=${REGISTRY} MEOMUL_IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.shared-edge.yml --env-file .env.production up -d --no-build
 
             sudo docker logout https://${REGION}-docker.pkg.dev || true
           "
