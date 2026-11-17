@@ -21,4 +21,17 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
 			res: context.switchToHttp().getResponse(),
 		};
 	}
+
+	/**
+	 * Behind Cloudflare every request reaches the API from the same proxy address, so
+	 * limiting by req.ip would put all visitors in one bucket. Cloudflare sets
+	 * CF-Connecting-IP to the visitor's address (clients cannot override it at the edge).
+	 */
+	protected async getTracker(req: Record<string, any>): Promise<string> {
+		const cfIp = req.headers?.['cf-connecting-ip'];
+		if (typeof cfIp === 'string' && cfIp.length > 0) {
+			return cfIp;
+		}
+		return req.ip;
+	}
 }

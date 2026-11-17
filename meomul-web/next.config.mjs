@@ -2,6 +2,12 @@ const backendGraphqlUrl =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:3001/graphql";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+// Where the Next server itself reaches the API for the /graphql and /upload rewrites.
+// When web and API run side by side (one Docker network), set INTERNAL_API_URL at build
+// time (e.g. http://meomul-api:3001) so proxied requests stay inside that network instead
+// of going out to the public domain and back.
+const internalApiUrl = process.env.INTERNAL_API_URL;
 const socketUrl =
   process.env.NEXT_PUBLIC_CHAT_SOCKET_URL ?? "http://localhost:3001";
 
@@ -71,11 +77,11 @@ const nextConfig = {
     return [
       {
         source: "/graphql",
-        destination: backendGraphqlUrl,
+        destination: internalApiUrl ? `${internalApiUrl}/graphql` : backendGraphqlUrl,
       },
       {
         source: "/upload/:path*",
-        destination: `${apiUrl}/upload/:path*`,
+        destination: `${internalApiUrl ?? apiUrl}/upload/:path*`,
       },
       {
         source: "/about",

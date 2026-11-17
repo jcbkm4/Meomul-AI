@@ -33,8 +33,12 @@ const graphqlOriginUrl = requireEnv(
 
 export const env = {
   graphqlUrl: graphqlOriginUrl,
+  // Server-side rendering can use a private address for the API (INTERNAL_GRAPHQL_URL,
+  // read at runtime) so SSR does not leave the host and come back through the public domain.
   graphqlHttpUrl:
-    typeof window !== "undefined" ? "/graphql" : graphqlOriginUrl,
+    typeof window !== "undefined"
+      ? "/graphql"
+      : process.env.INTERNAL_GRAPHQL_URL || graphqlOriginUrl,
   chatSocketUrl: requireEnv(
     "NEXT_PUBLIC_CHAT_SOCKET_URL",
     process.env.NEXT_PUBLIC_CHAT_SOCKET_URL,
