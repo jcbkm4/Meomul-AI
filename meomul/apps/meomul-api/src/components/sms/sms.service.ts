@@ -10,6 +10,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
  * Two providers:
  *   log     — writes the message to the log. Development only.
  *   solapi  — SOLAPI (solapi.com), the usual choice for Korean domestic SMS.
+ *   disabled — sends nothing and reports failure. For a public demo with no SMS account:
+ *              reset codes are neither delivered nor printed.
  *
  * Selected with SMS_PROVIDER. The service refuses to boot in production with the `log`
  * provider, because that would mean printing password reset codes to stdout while
@@ -55,6 +57,11 @@ export class SmsService implements OnModuleInit {
 	 * endpoint. Failures are logged and reported.
 	 */
 	public async send(message: SmsMessage): Promise<boolean> {
+		if (this.provider === 'disabled') {
+			this.logger.warn(`[sms:disabled] not sent to ${this.maskPhone(message.to)}`);
+			return false;
+		}
+
 		try {
 			if (this.provider === 'solapi') {
 				return await this.sendViaSolapi(message);
