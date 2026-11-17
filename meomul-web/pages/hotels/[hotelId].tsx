@@ -42,6 +42,7 @@ import type {
   StartChatMutationVars,
 } from "@/types/chat";
 import { LocalizedSeo } from "@/components/seo/localized-seo";
+import { ssrForwardHeaders } from "@/lib/apollo/ssr-headers";
 
 interface HotelDetailPageProps {
   initialHotel: HotelDetailItem | null;
@@ -601,7 +602,7 @@ export const getServerSideProps: GetServerSideProps<
     );
   }
 
-  const client = createApolloClient();
+  const client = createApolloClient({ headers: ssrForwardHeaders(context.req) });
 
   try {
     const hotelResult = await client.query<GetHotelQueryData, GetHotelQueryVars>({

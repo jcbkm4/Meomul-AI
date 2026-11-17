@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n/provider";
 import { resolveMediaUrl } from "@/lib/utils/media-url";
 import type { HotelListItem } from "@/types/hotel";
 import styles from "@/styles/home-landing-ovastin.module.css";
+import { OptimizedImg } from "@/components/ui/optimized-img";
 
 interface TrendingSectionProps {
   hotels: HotelListItem[];
@@ -30,9 +31,10 @@ export function TrendingSection({ hotels }: TrendingSectionProps) {
           <article key={`trending-hotel-${hotel._id}`} className={styles.trendingCard} role="listitem">
             <Link href={`/hotels/${hotel._id}`} className={styles.trendingCardLink}>
               {hotel.hotelImages[0] ? (
-                <img
+                <OptimizedImg
                   src={resolveMediaUrl(hotel.hotelImages[0])}
                   alt={hotel.hotelTitle}
+                  sizes="320px"
                   className={styles.trendingCardImage}
                 />
               ) : (

@@ -8,6 +8,7 @@ import {
   type RecentlyViewedHotelEntry,
 } from "@/lib/hotels/recently-viewed";
 import styles from "@/styles/home-landing-ovastin.module.css";
+import { OptimizedImg } from "@/components/ui/optimized-img";
 
 const MAX_CARDS = 6;
 
@@ -52,9 +53,10 @@ export function RecentlyViewedSection() {
           <article key={`recent-hotel-${hotel.hotelId}`} className={styles.trendingCard} role="listitem">
             <Link href={`/hotels/${hotel.hotelId}`} className={styles.trendingCardLink}>
               {hotel.imageUrl ? (
-                <img
+                <OptimizedImg
                   src={hotel.imageUrl}
                   alt={hotel.hotelTitle}
+                  sizes="320px"
                   className={styles.trendingCardImage}
                 />
               ) : (

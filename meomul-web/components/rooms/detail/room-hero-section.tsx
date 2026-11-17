@@ -134,7 +134,7 @@ export const RoomHeroSection = memo(function RoomHeroSection({
                     src={coverImage}
                     alt={roomName}
                     fill
-                    priority
+                    fetchPriority="high"
                     sizes="(max-width: 767px) calc(100vw - 1.5rem), 960px"
                     className="object-cover"
                   />
@@ -192,7 +192,7 @@ export const RoomHeroSection = memo(function RoomHeroSection({
                   src={primaryDesktopImage}
                   alt={roomName}
                   fill
-                  priority
+                  fetchPriority="high"
                   sizes="(min-width: 768px) 52vw, 100vw"
                   className="object-cover transition duration-300 group-hover:scale-[1.02]"
                 />
@@ -244,7 +244,7 @@ export const RoomHeroSection = memo(function RoomHeroSection({
                     src={primaryDesktopImage}
                     alt={roomName}
                     fill
-                    priority
+                    fetchPriority="high"
                     sizes="(max-width: 767px) calc(100vw - 1.5rem), (max-width: 1023px) calc(100vw - 3rem), 960px"
                     className="object-cover transition duration-300 group-hover:scale-[1.02]"
                   />

@@ -4,6 +4,7 @@ import { formatHotelLocationLabel } from "@/lib/hotels/hotels-ui";
 import { useI18n } from "@/lib/i18n/provider";
 import type { RecommendedCard } from "@/types/homepage";
 import styles from "@/styles/home-landing-ovastin.module.css";
+import { OptimizedImg } from "@/components/ui/optimized-img";
 
 interface RecommendedSectionProps {
   cards: RecommendedCard[];
@@ -79,9 +80,10 @@ export function RecommendedSection({
                 >
                   <Link href={`/hotels/${hotel._id}`} className={styles.signatureCardLink}>
                     {hotel.imageUrl ? (
-                      <img
+                      <OptimizedImg
                         src={hotel.imageUrl}
                         alt={hotel.title}
+                        sizes="(max-width: 767px) 90vw, 480px"
                         className={styles.signatureCardImage}
                       />
                     ) : (

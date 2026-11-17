@@ -72,5 +72,6 @@ export function getYouTubeThumbnailUrl(value?: string | null): string {
     return "";
   }
 
-  return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+  // maxresdefault.jpg only exists for some uploads (404 otherwise); hqdefault.jpg always exists.
+  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 }

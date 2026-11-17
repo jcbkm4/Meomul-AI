@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { GET_HOTEL_CONTEXT_QUERY, GET_PRICE_CALENDAR_QUERY, GET_ROOM_QUERY } from "@/graphql/hotel.gql";
 import { getSessionMember } from "@/lib/auth/session";
 import { formatDateInput } from "@/lib/rooms/booking";
+import { resolveMediaUrl } from "@/lib/utils/media-url";
 import type {
   GetHotelContextQueryData,
   GetHotelContextQueryVars,
@@ -195,7 +196,9 @@ export const useRoomDetailData = (): UseRoomDetailDataResult => {
     const seen = new Set<string>();
     const primaryImages = room?.roomImages?.length ? room.roomImages : hotel?.hotelImages ?? [];
 
-    return primaryImages.filter((image) => {
+    // Stored values can be bare paths or API-host URLs (often http://localhost:3001 from seeding);
+    // resolve them the way the hotel pages do, or the image optimizer rejects them.
+    return primaryImages.map((image) => resolveMediaUrl(image)).filter((image) => {
       if (!image || seen.has(image)) {
         return false;
       }

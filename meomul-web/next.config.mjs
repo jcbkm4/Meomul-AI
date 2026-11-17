@@ -83,6 +83,11 @@ const nextConfig = {
         source: "/upload/:path*",
         destination: `${internalApiUrl ?? apiUrl}/upload/:path*`,
       },
+      // Same-origin media (see lib/utils/media-url.ts): /uploads is read from the API over the
+      // private network, so neither browsers nor the image optimizer depend on the public API host.
+      ...(internalApiUrl
+        ? [{ source: "/uploads/:path*", destination: `${internalApiUrl}/uploads/:path*` }]
+        : []),
       {
         source: "/about",
         destination: "/about.html",
@@ -156,8 +161,14 @@ const nextConfig = {
     ];
   },
   images: {
-    formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60 * 60 * 24,
+    // WebP only: one format per URL keeps optimized images safe to cache at the CDN edge
+    // (AVIF-or-WebP by Accept header would need a Vary-aware cache), and it encodes faster.
+    formats: ["image/webp"],
+    // Optimized variants are keyed by source path, width and quality, and the sources never
+    // change in place, so they can live in caches for a month.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    // No 2048/3840 variants: nothing on the site is drawn wider than 1920 CSS px.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     remotePatterns: [
       {
         protocol: "https",

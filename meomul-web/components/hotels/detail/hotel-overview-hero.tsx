@@ -230,7 +230,7 @@ export const HotelOverviewHero = memo(function HotelOverviewHero({
                     src={primaryMedia.src}
                     alt={hotel.hotelTitle}
                     fill
-                    priority
+                    fetchPriority="high"
                     sizes="(max-width: 767px) calc(100vw - 1.5rem), 960px"
                     className="object-cover"
                   />
@@ -368,7 +368,7 @@ export const HotelOverviewHero = memo(function HotelOverviewHero({
                     src={primaryMedia.src}
                     alt={hotel.hotelTitle}
                     fill
-                    priority
+                    fetchPriority="high"
                     sizes="(min-width: 768px) 52vw, 100vw"
                     className="object-cover"
                   />
@@ -458,7 +458,7 @@ export const HotelOverviewHero = memo(function HotelOverviewHero({
                     src={primaryMedia.src}
                     alt={hotel.hotelTitle}
                     fill
-                    priority
+                    fetchPriority="high"
                     sizes="(max-width: 767px) calc(100vw - 1.5rem), 960px"
                     className="object-cover"
                   />

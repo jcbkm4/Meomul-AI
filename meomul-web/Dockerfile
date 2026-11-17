@@ -19,8 +19,10 @@ ARG NEXT_PUBLIC_CHAT_SOCKET_URL
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_BUILD_ID
 ARG NEXT_PUBLIC_SENTRY_DSN
-# Optional: private API address for the /graphql and /upload rewrites (see next.config.mjs)
+# Optional: private API address for the /graphql, /upload and /uploads rewrites (see next.config.mjs)
 ARG INTERNAL_API_URL
+# Optional: "1" serves media from the site's own /uploads (needs INTERNAL_API_URL)
+ARG NEXT_PUBLIC_MEDIA_SAME_ORIGIN
 
 ENV NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
@@ -29,6 +31,7 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_BUILD_ID=${NEXT_PUBLIC_BUILD_ID}
 ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 ENV INTERNAL_API_URL=${INTERNAL_API_URL}
+ENV NEXT_PUBLIC_MEDIA_SAME_ORIGIN=${NEXT_PUBLIC_MEDIA_SAME_ORIGIN}
 
 RUN npx next build
 
@@ -66,7 +69,11 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
 
-# Drop root — the server only ever reads from this filesystem.
+# The optimized-image cache. Deployments can mount a volume here so optimized images
+# survive redeploys; creating it as `node` gives a fresh named volume the right owner.
+RUN mkdir -p /app/.next/cache/images && chown -R node:node /app/.next/cache
+
+# Drop root — apart from the image cache, the server only ever reads from this filesystem.
 USER node
 
 EXPOSE 3000

@@ -69,7 +69,9 @@ async function bootstrap() {
 	);
 
 	// Serve static files — accessible at http://localhost:3001/uploads/<target>/<filename>
-	app.useStaticAssets(getUploadsRoot(), { prefix: '/uploads' });
+	// Uploads are written under unique names and never edited in place, so browsers and the
+	// CDN may keep them for a month instead of asking again on every page view.
+	app.useStaticAssets(getUploadsRoot(), { prefix: '/uploads', maxAge: '30d' });
 
 	// Graceful shutdown hooks (always enabled, not just for Redis)
 	app.enableShutdownHooks();

@@ -3,6 +3,7 @@ import { formatHotelLocationLabel } from "@/lib/hotels/hotels-ui";
 import { useI18n } from "@/lib/i18n/provider";
 import type { LastMinuteDealCard } from "@/types/homepage";
 import styles from "@/styles/home-landing-ovastin.module.css";
+import { OptimizedImg } from "@/components/ui/optimized-img";
 
 const MONTH_LABELS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -46,9 +47,10 @@ export function LastMinuteDealsSection({ deals }: LastMinuteDealsSectionProps) {
           <article key={`deal-room-${deal.roomId}`} className={styles.dealCard} role="listitem">
             <Link href={`/rooms/${deal.roomId}`} className={styles.dealCardLink}>
               {deal.imageUrl ? (
-                <img
+                <OptimizedImg
                   src={deal.imageUrl}
                   alt={`${deal.roomName} at ${deal.hotelTitle}`}
+                  sizes="336px"
                   className={styles.dealCardImage}
                 />
               ) : (

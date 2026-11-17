@@ -7,6 +7,7 @@ import { resolveMediaUrl } from "@/lib/utils/media-url";
 import type { ReviewDto, ReviewRatingsSummaryDto } from "@/types/hotel";
 import type { HeroSlide } from "@/types/homepage";
 import styles from "@/styles/home-landing-ovastin.module.css";
+import { OptimizedImg } from "@/components/ui/optimized-img";
 
 const HERO_ROTATION_MS = 4000;
 const REVIEW_LIMIT = 5;
@@ -174,10 +175,12 @@ export function HeroSection({
           </p>
           <Link href={activeSlideHref} className={styles.watchBubble}>
             {activeSlideData?.imageUrl ? (
-              <img
+              <OptimizedImg
                 src={activeSlideData.imageUrl}
                 alt={activeSlideData.title}
+                sizes="96px"
                 className={styles.watchImage}
+                eager
               />
             ) : (
               <div className={styles.watchFallback} />
@@ -223,11 +226,11 @@ export function HeroSection({
                       className={styles.slideImage}
                     />
                   ) : (
-                    <img
+                    <OptimizedImg
                       src={slide.imageUrl}
                       alt={slide.title}
+                      sizes="(max-width: 767px) calc(100vw - 1.5rem), (max-width: 991px) 720px, 900px"
                       className={styles.slideImage}
-                      loading="lazy"
                     />
                   )
                 ) : (

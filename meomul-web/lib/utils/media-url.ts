@@ -29,7 +29,25 @@ const resolveApiBaseUrl = (): string => {
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
-export const PROFILE_FALLBACK_IMAGE = `${API_BASE_URL}/uploads/default-avatar.png`;
+
+/**
+ * When the web app proxies /uploads to the API itself (NEXT_PUBLIC_MEDIA_SAME_ORIGIN=1, set by
+ * deployments that also set INTERNAL_API_URL), media stays same-origin: the browser asks the
+ * site, and the image optimizer reads it over the private network instead of the public API.
+ */
+const MEDIA_SAME_ORIGIN = process.env.NEXT_PUBLIC_MEDIA_SAME_ORIGIN === "1";
+const API_HOSTNAME = (() => {
+  try {
+    return new URL(API_BASE_URL).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+})();
+
+const toMediaUrl = (pathWithQuery: string): string =>
+  MEDIA_SAME_ORIGIN && pathWithQuery.startsWith("/uploads/") ? pathWithQuery : `${API_BASE_URL}${pathWithQuery}`;
+
+export const PROFILE_FALLBACK_IMAGE = toMediaUrl("/uploads/default-avatar.png");
 
 const isLoopbackHostname = (hostname: string): boolean => {
   const normalized = hostname.toLowerCase();
@@ -101,8 +119,12 @@ export const resolveMediaUrl = (value?: string | null): string => {
   if (/^https?:\/\//i.test(sanitized)) {
     try {
       const parsed = new URL(sanitized);
+      const pathWithQuery = `${parsed.pathname}${parsed.search}${parsed.hash}`;
       if (isLoopbackHostname(parsed.hostname)) {
-        return `${API_BASE_URL}${parsed.pathname}${parsed.search}${parsed.hash}`;
+        return toMediaUrl(pathWithQuery);
+      }
+      if (MEDIA_SAME_ORIGIN && parsed.hostname.toLowerCase() === API_HOSTNAME) {
+        return toMediaUrl(pathWithQuery);
       }
       return sanitized;
     } catch {
@@ -115,7 +137,7 @@ export const resolveMediaUrl = (value?: string | null): string => {
   }
 
   const normalizedPath = sanitized.startsWith("/") ? sanitized : `/${sanitized}`;
-  return `${API_BASE_URL}${normalizedPath}`;
+  return toMediaUrl(normalizedPath);
 };
 
 export const resolveProfileImageUrl = (value?: string | null): string => {

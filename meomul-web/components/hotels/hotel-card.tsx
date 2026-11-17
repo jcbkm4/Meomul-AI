@@ -201,7 +201,7 @@ export const HotelCard = memo(function HotelCard({
                 src={coverImage}
                 alt={hotel.hotelTitle}
                 fill
-                priority={imagePriority}
+                fetchPriority={imagePriority ? "high" : undefined}
                 sizes="42vw"
                 className="object-cover"
               />
@@ -265,7 +265,7 @@ export const HotelCard = memo(function HotelCard({
                 src={coverImage}
                 alt={hotel.hotelTitle}
                 fill
-                priority={imagePriority}
+                fetchPriority={imagePriority ? "high" : undefined}
                 sizes={imageSizes}
                 className="object-cover transition duration-500 group-hover:scale-[1.03]"
               />

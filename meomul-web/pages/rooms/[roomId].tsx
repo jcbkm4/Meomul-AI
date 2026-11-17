@@ -25,6 +25,7 @@ import type {
   GetRoomQueryVars,
 } from "@/types/hotel";
 import { LocalizedSeo } from "@/components/seo/localized-seo";
+import { ssrForwardHeaders } from "@/lib/apollo/ssr-headers";
 
 function RoomBookingSidebarLoader() {
   const { t } = useI18n();
@@ -308,7 +309,7 @@ export const getServerSideProps: GetServerSideProps<RoomDetailPageProps> = async
     };
   }
 
-  const apolloClient = createApolloClient();
+  const apolloClient = createApolloClient({ headers: ssrForwardHeaders(context.req) });
 
   try {
     const roomResult = await apolloClient.query<GetRoomQueryData, GetRoomQueryVars>({

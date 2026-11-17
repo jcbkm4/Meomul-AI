@@ -1,4 +1,5 @@
-import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { ArgumentsHost, Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import type { Response } from 'express';
 import { GqlExceptionFilter } from '@nestjs/graphql';
 import { GraphQLError } from 'graphql';
 import * as Sentry from '@sentry/nestjs';
@@ -8,8 +9,22 @@ export class GraphqlExceptionFilter implements GqlExceptionFilter {
 	private readonly logger = new Logger(GraphqlExceptionFilter.name);
 	private readonly isProduction = process.env.NODE_ENV === 'production';
 
-	public catch(exception: unknown): GraphQLError {
+	public catch(exception: unknown, host: ArgumentsHost): GraphQLError | void {
 		const { message, statusCode } = this.resolveError(exception);
+
+		// REST routes (uploads, /ai/chat, /health, unknown paths) need a real HTTP response.
+		// Returning a GraphQLError there sends nothing, and the request hangs until the client
+		// gives up: unknown URLs, 429s and validation errors all used to hang.
+		if (host.getType() === 'http') {
+			const response = host.switchToHttp().getResponse<Response>();
+			if (!response.headersSent) {
+				response.status(statusCode).json({ statusCode, message, code: this.mapStatusToCode(statusCode) });
+			} else if (!response.writableEnded) {
+				response.end();
+			}
+			return;
+		}
+
 		return new GraphQLError(message, {
 			extensions: {
 				success: false,

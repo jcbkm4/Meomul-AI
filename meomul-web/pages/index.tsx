@@ -41,6 +41,7 @@ import type {
 } from "@/types/homepage";
 import styles from "@/styles/home-landing-ovastin.module.css";
 import { LocalizedSeo } from "@/components/seo/localized-seo";
+import { ssrForwardHeaders } from "@/lib/apollo/ssr-headers";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -592,7 +593,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async (cont
   }
 
   const cookie = context.req?.headers.cookie;
-  const client = createApolloClient(cookie ? { headers: { cookie } } : undefined);
+  const client = createApolloClient({ headers: ssrForwardHeaders(context.req, { withCookies: Boolean(cookie) }) });
   const fallbackToday = new Date();
   const serverTodayIso = `${fallbackToday.getFullYear()}-${`${fallbackToday.getMonth() + 1}`.padStart(2, "0")}-${`${fallbackToday.getDate()}`.padStart(2, "0")}`;
 
