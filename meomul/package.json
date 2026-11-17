@@ -29,6 +29,7 @@
     "lock:refresh": "rm -rf node_modules package-lock.json && npm install"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.9.0",
     "@apollo/server": "^5.4.0",
     "@as-integrations/express5": "^1.1.2",
     "@keyv/redis": "^5.1.6",
@@ -68,7 +69,8 @@
     "rxjs": "^7.8.2",
     "socket.io-client": "^4.8.3",
     "uuid": "^11.1.0",
-    "ws": "^8.19.0"
+    "ws": "^8.19.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import type { Model, Types } from 'mongoose';
+import { isValidObjectId, type Model, type Types } from 'mongoose';
+import { z } from 'zod';
+import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
+import { ClaudeService } from './claude.service';
+import { AiQuotaService } from './ai-quota.service';
+import { INTENT_SYSTEM_PROMPT, RANKING_SYSTEM_PROMPT } from './ai-prompts';
 import { HotelLocation, HotelStatus, VerificationStatus, BadgeLevel } from '../../libs/enums/hotel.enum';
 import { DemandLevel, ReviewStatus, StayPurpose } from '../../libs/enums/common.enum';
 import { RoomStatus } from '../../libs/enums/room.enum';
@@ -39,7 +44,85 @@ type PriceInsight = {
 };
 
 const MAX_RETURNED_CANDIDATES = 3;
+/** How many pre-scored candidates Claude gets to choose from. */
+const CLAUDE_CANDIDATE_POOL = 8;
 const STAY_CONCIERGE_PROMPT_VERSION = 'stay-concierge.deterministic.v1';
+const STAY_CONCIERGE_CLAUDE_PROMPT_VERSION = 'stay-concierge.claude.v1';
+
+const AMENITY_VALUES = [
+	'workspace',
+	'wifi',
+	'meetingRoom',
+	'parking',
+	'breakfast',
+	'breakfastIncluded',
+	'gym',
+	'pool',
+	'spa',
+	'roomService',
+	'restaurant',
+	'familyRoom',
+	'kidsFriendly',
+	'coupleRoom',
+	'romanticView',
+	'privateBath',
+	'wheelchairAccessible',
+	'elevator',
+	'airportShuttle',
+	'evCharging',
+] as const;
+
+/** Filters Claude reads out of a free-text request (structured output). */
+const ClaudeIntentSchema = z.object({
+	location: z.enum(HotelLocation).nullable(),
+	district: z.string().nullable(),
+	purpose: z.enum(StayPurpose).nullable(),
+	budgetMax: z.number().int().nullable(),
+	guests: z.number().int().nullable(),
+	checkIn: z.string().nullable(),
+	checkOut: z.string().nullable(),
+	amenities: z.array(z.enum(AMENITY_VALUES)),
+	roomPreferences: z.array(z.enum(['quiet', 'view', 'late check-in', 'early check-in'])),
+	safetyPreferences: z.array(z.enum(['safety', '24h front desk', 'female only floor'])),
+	transportPreferences: z.array(z.enum(['near subway', 'parking', 'airport access'])),
+	language: z.enum(['en', 'ko', 'ru', 'uz']),
+});
+
+/** Claude's choice among the pre-scored candidates (structured output). */
+const ClaudeRankingSchema = z.object({
+	summary: z.string(),
+	nextAction: z.string(),
+	clarifyingQuestions: z.array(z.string()),
+	picks: z.array(
+		z.object({
+			hotelId: z.string(),
+			fitScore: z.number().int(),
+			headline: z.string(),
+			reasons: z.array(z.string()),
+			tradeoffs: z.array(z.string()),
+		}),
+	),
+});
+
+/** Filters the chat assistant's search tool accepts. */
+export interface StaySearchFilters {
+	location?: HotelLocation;
+	purpose?: StayPurpose;
+	budgetMax?: number;
+	guests?: number;
+	checkIn?: string;
+	checkOut?: string;
+	amenities?: string[];
+	nearSubway?: boolean;
+	district?: string;
+	language?: string;
+}
+
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const dateOrUndefined = (value?: string | null): string | undefined =>
+	value && DATE_PATTERN.test(value) ? value : undefined;
+const positiveIntOrUndefined = (value?: number | null): number | undefined =>
+	typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
 
 const LOCATION_KEYWORDS: Record<HotelLocation, string[]> = {
 	[HotelLocation.SEOUL]: ['seoul', '서울', 'gangnam', 'hongdae', 'myeongdong', 'jongno', 'itaewon', 'yeongdeungpo'],
@@ -112,23 +195,376 @@ export class AiConciergeService {
 		@InjectModel('RoomInventory') private readonly roomInventoryModel: Model<RoomInventoryDocument>,
 		@InjectModel('Review') private readonly reviewModel: Model<ReviewDocument>,
 		@InjectModel('UserProfile') private readonly userProfileModel: Model<UserProfileDocument>,
+		private readonly claude: ClaudeService,
+		private readonly quota: AiQuotaService,
 	) {}
 
 	public async ask(
 		currentMember: MemberJwtPayload | null,
 		input: AskStayConciergeInput,
+		visitorKey = 'unknown',
 	): Promise<StayConciergeResultDto> {
-		const intent = await this.buildIntent(currentMember, input);
+		const ruleIntent = await this.buildIntent(currentMember, input);
+		const useClaude = this.claude.enabled && this.quota.consume(visitorKey, 'match').ok;
+
+		let intent = ruleIntent;
+		if (useClaude) {
+			intent = (await this.extractIntentWithClaude(input, ruleIntent).catch((error) => this.logClaudeFailure('intent', error))) ?? ruleIntent;
+		}
+
 		const candidateContexts = await this.findCandidateContexts(intent);
-		const deterministicCandidates = this.scoreCandidates(intent, candidateContexts);
-		const clarifyingQuestions = this.buildClarifyingQuestions(intent, deterministicCandidates);
-		const result = this.buildDeterministicResult(intent, deterministicCandidates, clarifyingQuestions);
+		const scored = this.scoreCandidates(intent, candidateContexts, useClaude ? CLAUDE_CANDIDATE_POOL : MAX_RETURNED_CANDIDATES);
+
+		let result: StayConciergeResultDto | null = null;
+		if (useClaude && scored.length > 0) {
+			result = await this.rankWithClaude(input.message, intent, scored, candidateContexts).catch((error) =>
+				this.logClaudeFailure('ranking', error),
+			);
+		}
+		if (!result) {
+			const top = scored.slice(0, MAX_RETURNED_CANDIDATES);
+			result = this.buildDeterministicResult(intent, top, this.buildClarifyingQuestions(intent, top));
+		}
 
 		await this.storeSession(currentMember, input.message, result).catch((error) => {
 			this.logger.warn(`failed to store concierge session: ${error instanceof Error ? error.message : error}`);
 		});
 
 		return result;
+	}
+
+	// ─── Claude ──────────────────────────────────────────────────────────────
+
+	private logUsage(
+		step: string,
+		usage?: {
+			input_tokens: number;
+			output_tokens: number;
+			cache_read_input_tokens?: number | null;
+			cache_creation_input_tokens?: number | null;
+		} | null,
+	): void {
+		if (!usage) return;
+		this.logger.log(
+			`Claude ${step} usage: in=${usage.input_tokens} out=${usage.output_tokens} cacheRead=${usage.cache_read_input_tokens ?? 0} cacheWrite=${usage.cache_creation_input_tokens ?? 0}`,
+		);
+	}
+
+	private logClaudeFailure(step: string, error: unknown): null {
+		this.logger.warn(`Claude ${step} failed, using rule-based fallback: ${error instanceof Error ? error.message : error}`);
+		return null;
+	}
+
+	private async extractIntentWithClaude(
+		input: AskStayConciergeInput,
+		ruleIntent: StayIntentDto,
+	): Promise<StayIntentDto | null> {
+		const today = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
+		const response = await this.claude.client.beta.messages.parse({
+			model: this.claude.model,
+			max_tokens: 4000,
+			betas: this.claude.betas,
+			fallbacks: 'default',
+			output_config: { effort: 'low', format: betaZodOutputFormat(ClaudeIntentSchema) },
+			system: [{ type: 'text', text: INTENT_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+			messages: [
+				{
+					role: 'user',
+					content: `Today is ${today} (Korea time).\n\nRequest:\n${input.message.trim().slice(0, 1500)}`,
+				},
+			],
+		});
+
+		this.logUsage('intent', response.usage);
+		const parsed = response.stop_reason === 'refusal' ? null : response.parsed_output;
+		if (!parsed) {
+			return null;
+		}
+
+		// Explicit form inputs win over what was read from the text; a signed-in guest's saved
+		// preferences fill what the text leaves open (they are already in ruleIntent).
+		return {
+			location: parsed.location ?? ruleIntent.location,
+			district: parsed.district ?? undefined,
+			checkIn: dateOrUndefined(input.checkIn) ?? dateOrUndefined(parsed.checkIn),
+			checkOut: dateOrUndefined(input.checkOut) ?? dateOrUndefined(parsed.checkOut),
+			guests: input.guests ?? positiveIntOrUndefined(parsed.guests),
+			budgetMax: input.budgetMax ?? positiveIntOrUndefined(parsed.budgetMax),
+			purpose: parsed.purpose ?? ruleIntent.purpose,
+			amenities: this.uniqueStrings([...parsed.amenities]),
+			roomPreferences: parsed.roomPreferences,
+			safetyPreferences: parsed.safetyPreferences,
+			transportPreferences: parsed.transportPreferences,
+			language: parsed.language,
+			confidence: 0.9,
+		};
+	}
+
+	private async rankWithClaude(
+		message: string,
+		intent: StayIntentDto,
+		scored: StayCandidateDto[],
+		contexts: CandidateContext[],
+	): Promise<StayConciergeResultDto | null> {
+		const contextByHotelId = new Map(contexts.map((context) => [String(context.hotel._id), context]));
+		const candidates = scored.flatMap((candidate) => {
+			const context = contextByHotelId.get(candidate.hotelId);
+			return context ? [this.describeCandidate(context, candidate)] : [];
+		});
+
+		const response = await this.claude.client.beta.messages.parse({
+			model: this.claude.model,
+			max_tokens: 8000,
+			betas: this.claude.betas,
+			fallbacks: 'default',
+			output_config: { effort: 'low', format: betaZodOutputFormat(ClaudeRankingSchema) },
+			system: [{ type: 'text', text: RANKING_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+			messages: [
+				{
+					role: 'user',
+					content: JSON.stringify({
+						request: message.trim().slice(0, 1500),
+						filters: {
+							location: intent.location ?? null,
+							district: intent.district ?? null,
+							purpose: intent.purpose ?? null,
+							guests: intent.guests ?? null,
+							budgetMaxKrw: intent.budgetMax ?? null,
+							checkIn: intent.checkIn ?? null,
+							checkOut: intent.checkOut ?? null,
+							amenities: intent.amenities,
+							roomPreferences: intent.roomPreferences,
+							transportPreferences: intent.transportPreferences,
+							safetyPreferences: intent.safetyPreferences,
+							language: intent.language,
+						},
+						candidates,
+					}),
+				},
+			],
+		});
+
+		this.logUsage('ranking', response.usage);
+		const parsed = response.stop_reason === 'refusal' ? null : response.parsed_output;
+		if (!parsed) {
+			return null;
+		}
+
+		// Keep only picks that point at a real candidate, and keep the facts (price, dates,
+		// trust signals) from our own data rather than from the model.
+		const byHotelId = new Map(scored.map((candidate) => [candidate.hotelId, candidate]));
+		const seen = new Set<string>();
+		const picks: StayCandidateDto[] = [];
+		for (const pick of parsed.picks) {
+			const base = byHotelId.get(pick.hotelId);
+			if (!base || seen.has(pick.hotelId)) {
+				continue;
+			}
+			seen.add(pick.hotelId);
+			picks.push({
+				...base,
+				fitScore: Math.max(0, Math.min(100, Math.round(pick.fitScore))),
+				headline: pick.headline.slice(0, 200),
+				reasons: pick.reasons.slice(0, 4),
+				tradeoffs: pick.tradeoffs.slice(0, 4),
+			});
+			if (picks.length === MAX_RETURNED_CANDIDATES) {
+				break;
+			}
+		}
+
+		if (picks.length === 0) {
+			return null;
+		}
+
+		return {
+			intent,
+			candidates: picks,
+			clarifyingQuestions: parsed.clarifyingQuestions.slice(0, 3),
+			summary: parsed.summary,
+			nextAction: parsed.nextAction,
+			provider: 'claude',
+		};
+	}
+
+	/** The facts Claude sees for one candidate. Everything here comes from the database. */
+	private describeCandidate(context: CandidateContext, scored: StayCandidateDto): Record<string, unknown> {
+		const { hotel, room, reviewStats, priceInsight } = context;
+		const amenities = Object.entries((hotel.amenities ?? {}) as unknown as Record<string, unknown>)
+			.filter(([, value]) => value === true)
+			.map(([key]) => key);
+		const location = hotel.detailedLocation;
+
+		return {
+			hotelId: scored.hotelId,
+			name: hotel.hotelTitle,
+			type: hotel.hotelType,
+			city: hotel.hotelLocation,
+			district: location?.district ?? null,
+			description: hotel.hotelDesc?.slice(0, 280) ?? null,
+			stars: hotel.starRating ?? null,
+			guestRating: hotel.hotelRating || null,
+			reviewCount: hotel.hotelReviews ?? 0,
+			verified: hotel.verificationStatus === VerificationStatus.VERIFIED,
+			badge: hotel.badgeLevel ?? null,
+			safeStayCertified: Boolean(hotel.safeStayCertified),
+			nearestSubway: location?.nearestSubway ?? null,
+			walkMinutesToSubway: location?.walkingDistance ?? null,
+			checkIn: hotel.checkInTime,
+			checkOut: hotel.checkOutTime,
+			flexibleCheckIn: Boolean(hotel.flexibleCheckIn?.enabled),
+			cancellationPolicy: hotel.cancellationPolicy,
+			petsAllowed: Boolean(hotel.petsAllowed),
+			amenities,
+			bestRoom: {
+				name: room.roomName,
+				type: room.roomType,
+				maxGuests: room.maxOccupancy,
+				bed: room.bedType,
+				sizeSqm: room.roomSize ?? null,
+				view: room.viewType ?? null,
+				pricePerNightKrw: priceInsight.currentPrice,
+			},
+			priceTiming: {
+				cheapestDateThisMonth: priceInsight.cheapestDate ?? null,
+				cheapestPriceKrw: priceInsight.cheapestPrice ?? null,
+				notes: priceInsight.notes,
+			},
+			recentReviews: reviewStats.recentSnippets,
+			preScore: scored.fitScore,
+			preReasons: scored.reasons,
+			preTradeoffs: scored.tradeoffs,
+		};
+	}
+
+	// ─── Chat assistant tools ────────────────────────────────────────────────
+
+	/** search_hotels: rule-based retrieval and scoring over the live inventory. */
+	public async searchStays(filters: StaySearchFilters, limit = 5): Promise<StayCandidateDto[]> {
+		const intent: StayIntentDto = {
+			location: filters.location,
+			district: filters.district?.trim() || undefined,
+			purpose: filters.purpose,
+			budgetMax: positiveIntOrUndefined(filters.budgetMax),
+			guests: positiveIntOrUndefined(filters.guests),
+			checkIn: dateOrUndefined(filters.checkIn),
+			checkOut: dateOrUndefined(filters.checkOut),
+			amenities: this.uniqueStrings(filters.amenities ?? []),
+			roomPreferences: [],
+			safetyPreferences: [],
+			transportPreferences: filters.nearSubway ? ['near subway'] : [],
+			language: filters.language ?? 'en',
+			confidence: 0.9,
+		};
+		const contexts = await this.findCandidateContexts(intent);
+		return this.scoreCandidates(intent, contexts, limit);
+	}
+
+	/** show_stays: card data (photo, area, rating, cheapest room) for hotels by id, in the given order. */
+	public async getStayCards(hotelIds: string[]): Promise<StayCandidateDto[]> {
+		const ids = hotelIds.filter((id) => isValidObjectId(id));
+		if (ids.length === 0) {
+			return [];
+		}
+		const hotels = await this.hotelModel.find({ _id: { $in: ids }, hotelStatus: HotelStatus.ACTIVE }).exec();
+		const rooms = await this.roomModel
+			.find({ hotelId: { $in: hotels.map((hotel) => hotel._id) }, roomStatus: RoomStatus.AVAILABLE })
+			.sort({ basePrice: 1 })
+			.exec();
+		const cheapestRoom = new Map<string, RoomDocument>();
+		for (const room of rooms) {
+			const key = String(room.hotelId);
+			if (!cheapestRoom.has(key)) cheapestRoom.set(key, room);
+		}
+		const byId = new Map(hotels.map((hotel) => [String(hotel._id), hotel]));
+		return ids.flatMap((id) => {
+			const hotel = byId.get(id);
+			if (!hotel) return [];
+			const room = cheapestRoom.get(id);
+			return [
+				{
+					hotelId: id,
+					hotelTitle: hotel.hotelTitle,
+					hotelImage: hotel.hotelImages?.[0] ?? room?.roomImages?.[0],
+					hotelLocation: hotel.hotelLocation,
+					hotelDistrict: hotel.detailedLocation?.district,
+					hotelRating: hotel.hotelRating || undefined,
+					hotelReviews: hotel.hotelReviews || undefined,
+					roomId: room ? String(room._id) : undefined,
+					roomName: room?.roomName,
+					estimatedPrice: room ? this.resolveCurrentPublicPrice(room) : hotel.startingPrice || undefined,
+					fitScore: 0,
+					reasons: [],
+					tradeoffs: [],
+					trustSignals: [],
+					priceInsights: [],
+				},
+			];
+		});
+	}
+
+	/** get_hotel_details: one hotel's facts, its bookable rooms and recent reviews. */
+	public async getHotelDetails(hotelId: string): Promise<Record<string, unknown> | null> {
+		if (!isValidObjectId(hotelId)) {
+			return null;
+		}
+		const hotel = await this.hotelModel.findOne({ _id: hotelId, hotelStatus: HotelStatus.ACTIVE }).exec();
+		if (!hotel) {
+			return null;
+		}
+		const [rooms, reviewStats] = await Promise.all([
+			this.roomModel
+				.find({ hotelId: hotel._id, roomStatus: RoomStatus.AVAILABLE })
+				.sort({ basePrice: 1 })
+				.limit(8)
+				.exec(),
+			this.getReviewStats(hotel._id),
+		]);
+		const amenities = Object.entries((hotel.amenities ?? {}) as unknown as Record<string, unknown>)
+			.filter(([, value]) => value === true)
+			.map(([key]) => key);
+		const location = hotel.detailedLocation;
+
+		return {
+			hotelId: String(hotel._id),
+			name: hotel.hotelTitle,
+			type: hotel.hotelType,
+			city: hotel.hotelLocation,
+			district: location?.district ?? null,
+			address: location?.address ?? null,
+			description: hotel.hotelDesc?.slice(0, 600) ?? null,
+			stars: hotel.starRating ?? null,
+			guestRating: hotel.hotelRating || null,
+			reviewCount: hotel.hotelReviews ?? 0,
+			nearestSubway: location?.nearestSubway ?? null,
+			walkMinutesToSubway: location?.walkingDistance ?? null,
+			checkIn: hotel.checkInTime,
+			checkOut: hotel.checkOutTime,
+			cancellationPolicy: hotel.cancellationPolicy,
+			petsAllowed: Boolean(hotel.petsAllowed),
+			verified: hotel.verificationStatus === VerificationStatus.VERIFIED,
+			safeStayCertified: Boolean(hotel.safeStayCertified),
+			amenities,
+			startingPriceKrw: hotel.startingPrice || null,
+			rooms: rooms.map((room) => ({
+				roomId: String(room._id),
+				name: room.roomName,
+				type: room.roomType,
+				maxGuests: room.maxOccupancy,
+				bed: room.bedType,
+				sizeSqm: room.roomSize ?? null,
+				view: room.viewType ?? null,
+				pricePerNightKrw: this.resolveCurrentPublicPrice(room),
+				weekendSurchargeKrw: room.weekendSurcharge || 0,
+				lastMinuteDeal: room.lastMinuteDeal?.isActive ? `${room.lastMinuteDeal.discountPercent}% off` : null,
+				availableRooms: room.availableRooms,
+			})),
+			reviews: {
+				averageRating: reviewStats.averageRating ?? null,
+				verifiedStays: reviewStats.verifiedCount,
+				recent: reviewStats.recentSnippets,
+			},
+		};
 	}
 
 	private async buildIntent(
@@ -420,11 +856,15 @@ export class AiConciergeService {
 		};
 	}
 
-	private scoreCandidates(intent: StayIntentDto, contexts: CandidateContext[]): StayCandidateDto[] {
+	private scoreCandidates(
+		intent: StayIntentDto,
+		contexts: CandidateContext[],
+		limit = MAX_RETURNED_CANDIDATES,
+	): StayCandidateDto[] {
 		return contexts
 			.map((context) => this.scoreCandidate(intent, context))
 			.sort((a, b) => b.fitScore - a.fitScore)
-			.slice(0, MAX_RETURNED_CANDIDATES);
+			.slice(0, limit);
 	}
 
 	private scoreCandidate(intent: StayIntentDto, context: CandidateContext): StayCandidateDto {
@@ -444,6 +884,16 @@ export class AiConciergeService {
 			}
 		} else {
 			score += 8;
+		}
+
+		if (intent.district) {
+			if (this.matchesDistrict(hotel, intent.district)) {
+				score += 14;
+				reasons.push(`In ${intent.district}.`);
+			} else {
+				score -= 6;
+				tradeoffs.push(`Not in ${intent.district}.`);
+			}
 		}
 
 		if (intent.budgetMax) {
@@ -542,6 +992,11 @@ export class AiConciergeService {
 		return {
 			hotelId: String(hotel._id),
 			hotelTitle: hotel.hotelTitle,
+			hotelImage: hotel.hotelImages?.[0] ?? room.roomImages?.[0],
+			hotelLocation: hotel.hotelLocation,
+			hotelDistrict: hotel.detailedLocation?.district,
+			hotelRating: hotel.hotelRating || undefined,
+			hotelReviews: hotel.hotelReviews || undefined,
 			roomId: String(room._id),
 			roomName: room.roomName,
 			fitScore: Math.max(0, Math.min(100, Math.round(score))),
@@ -603,7 +1058,8 @@ export class AiConciergeService {
 			candidates: result.candidates,
 			aiSummary: result.summary,
 			provider: result.provider,
-			promptVersion: STAY_CONCIERGE_PROMPT_VERSION,
+			promptVersion:
+				result.provider === 'claude' ? STAY_CONCIERGE_CLAUDE_PROMPT_VERSION : STAY_CONCIERGE_PROMPT_VERSION,
 		});
 	}
 
@@ -624,6 +1080,25 @@ export class AiConciergeService {
 			return room.lastMinuteDeal.dealPrice;
 		}
 		return room.basePrice;
+	}
+
+	/** Loose match of a named neighbourhood ("Gangnam", "Haeundae") against the hotel's address fields. */
+	private matchesDistrict(hotel: HotelDocument, district: string): boolean {
+		const token = district
+			.toLowerCase()
+			.replace(/\b(station|stn|area|district)\b/g, '')
+			.replace(/-(gu|gun|dong|si)\b/g, '')
+			.replace(/[^a-z0-9가-힣]+/g, '');
+		if (token.length < 2) {
+			return false;
+		}
+		const location = hotel.detailedLocation;
+		const haystack = [location?.district, location?.dong, location?.address, location?.nearestSubway, hotel.hotelTitle]
+			.filter(Boolean)
+			.join(' ')
+			.toLowerCase()
+			.replace(/[^a-z0-9가-힣]+/g, '');
+		return haystack.includes(token);
 	}
 
 	private hotelHasAmenity(hotel: HotelDocument, amenity: string): boolean {

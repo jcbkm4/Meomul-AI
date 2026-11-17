@@ -1,0 +1,84 @@
+/* Hallmark · v2.0.0 · shape: app screen · screen: Meomul AI, a stay finder thread with Claude's shortlist under each answer · states: empty, working, error, full · genre: modern-minimal (inferred) · theme: Meomul's own (ink, harbor green, brand teal, system sans with an editorial serif welcome) · signature: the shortlist rows */
+/* Hallmark · pre-emit critique: P4 H5 E4 S4 R5 V3 · weakest: V, a chat thread is a familiar shape, kept on purpose so the tool disappears into the task; the specificity is spent on the shortlist rows and the harbor-green identity */
+/* Hallmark · waive 74 · --ink kept at the stock slate value · it is Meomul's existing brand ink (globals.css --foreground), pinned by the brief */
+
+/* Meomul AI tokens. Every colour in the AI surfaces resolves through these. */
+:root {
+  --ink: #0f172a;
+  --paper: #ffffff;
+  --harbor: #123b3a;
+  --harbor-soft: #e8f1ef;
+  --harbor-line: #c4d9d5;
+  --ink-soft: #1c2a30;
+  --body: #334155;
+  --quiet: #5e6e72;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --sunk: #f1f5f9;
+  --danger-soft: #fef2f2;
+  --danger-ink: #7f1d1d;
+  --star: #f5b324;
+  --ai-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-harbor: var(--harbor);
+  --color-harbor-soft: var(--harbor-soft);
+  --color-harbor-line: var(--harbor-line);
+  --color-ink-soft: var(--ink-soft);
+  --color-body: var(--body);
+  --color-quiet: var(--quiet);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-sunk: var(--sunk);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
+  --color-star: var(--star);
+}
+
+/* Body copy on the AI page wraps without leaving one word alone on the last line. */
+.meomul-ai p,
+.meomul-ai li {
+  text-wrap: pretty;
+}
+
+/* Browser surfaces on the AI page carry the palette too. */
+.meomul-ai ::selection {
+  background: color-mix(in srgb, var(--brand) 22%, transparent);
+  color: var(--ink);
+}
+
+.meomul-ai textarea,
+.meomul-ai input {
+  caret-color: var(--brand);
+}
+
+/* The one authored motion: a shortlist settles in once the answer is complete. */
+@keyframes meomul-ai-settle {
+  from {
+    opacity: 0.4;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.meomul-ai-settle {
+  animation: meomul-ai-settle 360ms var(--ai-ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meomul-ai-settle {
+    animation: none;
+  }
+}
+
+/* No sideways scroll anywhere on the site. */
+html,
+body {
+  overflow-x: clip;
+}

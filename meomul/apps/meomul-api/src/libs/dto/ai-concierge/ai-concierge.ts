@@ -41,7 +41,7 @@ export class StayIntentDto {
 	transportPreferences: string[];
 
 	@Field(() => String)
-	language: 'en' | 'ko';
+	language: string;
 
 	@Field(() => Float)
 	confidence: number;
@@ -54,6 +54,25 @@ export class StayCandidateDto {
 
 	@Field(() => String)
 	hotelTitle: string;
+
+	@Field(() => String, { nullable: true })
+	hotelImage?: string;
+
+	@Field(() => String, { nullable: true })
+	hotelLocation?: string;
+
+	@Field(() => String, { nullable: true })
+	hotelDistrict?: string;
+
+	@Field(() => Float, { nullable: true })
+	hotelRating?: number;
+
+	@Field(() => Int, { nullable: true })
+	hotelReviews?: number;
+
+	/** One-line pitch written by Claude; absent on rule-based results. */
+	@Field(() => String, { nullable: true })
+	headline?: string;
 
 	@Field(() => String, { nullable: true })
 	roomId?: string;

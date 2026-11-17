@@ -8,6 +8,10 @@ import RoomSchema from '../../schemas/Room.model';
 import UserProfileSchema from '../../schemas/UserProfile.model';
 import { AiConciergeResolver } from './ai-concierge.resolver';
 import { AiConciergeService } from './ai-concierge.service';
+import { AiChatController } from './ai-chat.controller';
+import { AiChatService } from './ai-chat.service';
+import { AiQuotaService } from './ai-quota.service';
+import { ClaudeService } from './claude.service';
 
 @Module({
 	imports: [
@@ -20,7 +24,8 @@ import { AiConciergeService } from './ai-concierge.service';
 			{ name: 'UserProfile', schema: UserProfileSchema },
 		]),
 	],
-	providers: [AiConciergeResolver, AiConciergeService],
+	controllers: [AiChatController],
+	providers: [AiConciergeResolver, AiConciergeService, AiChatService, AiQuotaService, ClaudeService],
 	exports: [AiConciergeService],
 })
 export class AiConciergeModule {}

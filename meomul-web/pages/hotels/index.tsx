@@ -3,8 +3,7 @@ import type { GetServerSideProps } from "next";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles } from "lucide-react";
-import { AskMeomulDrawer } from "@/components/concierge/ask-meomul-drawer";
+import { AskAiBar } from "@/components/ai/ask-ai-bar";
 import { HotelsActiveFilterChips } from "@/components/hotels/hotels-active-filter-chips";
 import { HotelsDiscoveryToolbar } from "@/components/hotels/hotels-discovery-toolbar";
 import { HotelsResultsSkeleton } from "@/components/hotels/hotels-results-skeleton";
@@ -28,6 +27,7 @@ import type {
   HotelListItem,
 } from "@/types/hotel";
 import { LocalizedSeo } from "@/components/seo/localized-seo";
+import { ssrForwardHeaders } from "@/lib/apollo/ssr-headers";
 
 const HotelsFiltersDrawer = dynamic(
   () =>
@@ -52,7 +52,6 @@ export default function HotelsPage({
   const apolloClient = useApolloClient();
   const [isHydrated, setIsHydrated] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isConciergeOpen, setIsConciergeOpen] = useState(false);
   const [displayedHotels, setDisplayedHotels] =
     useState<HotelListItem[]>(initialHotels);
   const [displayedTotal, setDisplayedTotal] = useState(initialTotal);
@@ -178,13 +177,6 @@ export default function HotelsPage({
         appliedTotal={total}
       />
 
-      <AskMeomulDrawer
-        isOpen={isConciergeOpen}
-        onClose={() => {
-          setIsConciergeOpen(false);
-        }}
-      />
-
       <main className={`space-y-2.5 sm:space-y-4 ${HOTELS_MOTION_INTENSITY_CLASS}`}>
         <ScrollReveal delayMs={20} className="relative z-50">
           <HotelsDiscoveryToolbar
@@ -198,32 +190,7 @@ export default function HotelsPage({
         </ScrollReveal>
 
         <ScrollReveal delayMs={22}>
-          <section className="overflow-hidden rounded-[1.4rem] border border-teal-100 bg-[#123b3a] shadow-[0_24px_80px_-54px_rgba(15,23,42,0.55)] sm:rounded-[1.8rem]">
-            <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-teal-50">
-                  <Sparkles size={14} />
-                  Ask Meomul
-                </div>
-                <h2 className="mt-2 font-display text-xl font-black tracking-tight text-white sm:text-2xl">
-                  Describe the stay. Get matched options with tradeoffs.
-                </h2>
-                <p className="mt-1.5 text-sm leading-6 text-teal-50/75">
-                  The concierge checks active hotels, room fit, budget, trust signals, and price timing before explaining the best choices.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsConciergeOpen(true);
-                }}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-black text-[#123b3a] shadow-sm transition hover:bg-teal-50"
-              >
-                <Sparkles size={17} />
-                Open concierge
-              </button>
-            </div>
-          </section>
+          <AskAiBar />
         </ScrollReveal>
 
         <ScrollReveal delayMs={25}>
@@ -336,7 +303,7 @@ export const getServerSideProps: GetServerSideProps<HotelsPageProps> = async (
     );
   }
 
-  const client = createApolloClient();
+  const client = createApolloClient({ headers: ssrForwardHeaders(context.req) });
 
   try {
     const result = await client.query<GetHotelsQueryData, GetHotelsQueryVars>({

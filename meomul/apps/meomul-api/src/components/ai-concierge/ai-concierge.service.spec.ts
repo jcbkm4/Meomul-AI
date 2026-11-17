@@ -10,6 +10,26 @@ import {
 import { ReviewStatus, StayPurpose } from '../../libs/enums/common.enum';
 import { RoomStatus, RoomType, BedType, ViewType } from '../../libs/enums/room.enum';
 import { AiConciergeService } from './ai-concierge.service';
+import { AiQuotaService } from './ai-quota.service';
+import type { ClaudeService } from './claude.service';
+
+/** Claude switched off: the service must behave exactly like the rule-based concierge. */
+const claudeOff = { enabled: false } as unknown as ClaudeService;
+
+/** Claude switched on, with each beta.messages.parse call answered from `outputs` in order. */
+function claudeWith(outputs: unknown[]): { claude: ClaudeService; parse: jest.Mock } {
+	const parse = jest.fn();
+	for (const output of outputs) {
+		parse.mockResolvedValueOnce({ stop_reason: 'end_turn', parsed_output: output });
+	}
+	const claude = {
+		enabled: true,
+		model: 'claude-opus-5-5',
+		betas: ['server-side-fallback-2026-07-01'],
+		client: { beta: { messages: { parse } } },
+	} as unknown as ClaudeService;
+	return { claude, parse };
+}
 
 function queryChain<T>(result: T): Record<string, jest.Mock> {
 	const chain: Record<string, jest.Mock> = {
@@ -167,6 +187,8 @@ describe('AiConciergeService', () => {
 			roomInventoryModel as never,
 			reviewModel as never,
 			userProfileModel as never,
+			claudeOff,
+			new AiQuotaService(),
 		);
 
 		const result = await service.ask(null, {
@@ -195,6 +217,8 @@ describe('AiConciergeService', () => {
 			emptyModel as never,
 			emptyModel as never,
 			queryChain(null) as never,
+			claudeOff,
+			new AiQuotaService(),
 		);
 
 		const result = await service.ask(null, {
@@ -205,5 +229,117 @@ describe('AiConciergeService', () => {
 		expect(result.candidates).toHaveLength(0);
 		expect(result.clarifyingQuestions.length).toBeGreaterThan(0);
 		expect(result.nextAction).toContain('Adjust');
+	});
+
+	const buildModels = () => ({
+		sessionModel: { create: jest.fn().mockResolvedValue({}) },
+		hotelModel: queryChain([hotel]),
+		roomModel: queryChain([room]),
+		roomInventoryModel: queryChain([]),
+		reviewModel: queryChain([review]),
+		userProfileModel: queryChain(null),
+	});
+
+	const claudeIntent = {
+		location: HotelLocation.SEOUL,
+		district: 'Gangnam',
+		purpose: StayPurpose.BUSINESS,
+		budgetMax: 200000,
+		guests: 2,
+		checkIn: null,
+		checkOut: null,
+		amenities: ['workspace'],
+		roomPreferences: ['quiet'],
+		safetyPreferences: [],
+		transportPreferences: ['near subway'],
+		language: 'en',
+	};
+
+	it('uses Claude picks but keeps only real candidates and our own price facts', async () => {
+		const models = buildModels();
+		const { claude, parse } = claudeWith([
+			claudeIntent,
+			{
+				summary: 'The Gangnam work suite is the clear pick.',
+				nextAction: 'Open the hotel and compare the Work Suite dates.',
+				clarifyingQuestions: ['Which dates?'],
+				picks: [
+					{ hotelId: 'not-a-real-hotel', fitScore: 99, headline: 'Invented', reasons: ['x'], tradeoffs: [] },
+					{ hotelId: String(hotelId), fitScore: 140, headline: 'Quiet desk near Gangnam station', reasons: ['Desk and fast Wi-Fi'], tradeoffs: [] },
+				],
+			},
+		]);
+		const service = new AiConciergeService(
+			models.sessionModel as never,
+			models.hotelModel as never,
+			models.roomModel as never,
+			models.roomInventoryModel as never,
+			models.reviewModel as never,
+			models.userProfileModel as never,
+			claude,
+			new AiQuotaService(),
+		);
+
+		const result = await service.ask(null, { message: 'Quiet work trip in Gangnam for two, under 200k', language: 'en' }, '1.2.3.4');
+
+		expect(parse).toHaveBeenCalledTimes(2);
+		expect(result.provider).toBe('claude');
+		expect(result.intent.district).toBe('Gangnam');
+		expect(result.candidates).toHaveLength(1);
+		expect(result.candidates[0].hotelId).toBe(String(hotelId));
+		expect(result.candidates[0].fitScore).toBe(100);
+		expect(result.candidates[0].headline).toBe('Quiet desk near Gangnam station');
+		expect(result.candidates[0].estimatedPrice).toBe(180000);
+		expect(result.candidates[0].trustSignals).toContain('Hotel is verified.');
+	});
+
+	it('falls back to the rule-based result when Claude fails', async () => {
+		const models = buildModels();
+		const parse = jest.fn().mockRejectedValue(new Error('network down'));
+		const claude = {
+			enabled: true,
+			model: 'claude-opus-5-5',
+			betas: [],
+			client: { beta: { messages: { parse } } },
+		} as unknown as ClaudeService;
+		const service = new AiConciergeService(
+			models.sessionModel as never,
+			models.hotelModel as never,
+			models.roomModel as never,
+			models.roomInventoryModel as never,
+			models.reviewModel as never,
+			models.userProfileModel as never,
+			claude,
+			new AiQuotaService(),
+		);
+
+		const result = await service.ask(null, {
+			message: 'Quiet business hotel in Seoul under 200000 KRW with workspace and subway access for 2 guests',
+			language: 'en',
+		});
+
+		expect(result.provider).toBe('deterministic');
+		expect(result.candidates[0].hotelTitle).toBe('Meomul Business Stay Seoul');
+	});
+
+	it('ranks stays in the named neighbourhood first for the chat search tool', async () => {
+		const models = buildModels();
+		const service = new AiConciergeService(
+			models.sessionModel as never,
+			models.hotelModel as never,
+			models.roomModel as never,
+			models.roomInventoryModel as never,
+			models.reviewModel as never,
+			models.userProfileModel as never,
+			claudeOff,
+			new AiQuotaService(),
+		);
+
+		const inGangnam = await service.searchStays({ location: HotelLocation.SEOUL, district: 'Gangnam station' });
+		const elsewhere = await service.searchStays({ location: HotelLocation.SEOUL, district: 'Hongdae' });
+
+		expect(inGangnam[0].reasons).toContain('In Gangnam station.');
+		expect(elsewhere[0].tradeoffs).toContain('Not in Hongdae.');
+		expect(inGangnam[0].fitScore).toBeGreaterThan(elsewhere[0].fitScore);
 	});
 });

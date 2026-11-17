@@ -3,6 +3,26 @@ import type { SupportedLocale } from "@/lib/i18n/config";
 export interface MessageDictionary {
   nav_home: string;
   nav_hotels: string;
+  nav_ai: string;
+  ai_meta_description: string;
+  ai_welcome_title: string;
+  ai_welcome_sub: string;
+  ai_powered: string;
+  ai_disclaimer: string;
+  ai_stays_label: string;
+  ai_status_search: string;
+  ai_status_search_city: string;
+  ai_status_details: string;
+  ai_stop: string;
+  ai_followup_cheaper: string;
+  ai_followup_breakfast: string;
+  ai_followup_compare: string;
+  ai_followup_cheaper_prompt: string;
+  ai_followup_breakfast_prompt: string;
+  ai_followup_compare_prompt: string;
+  ai_bar_placeholder: string;
+  ai_bar_submit: string;
+  ai_help_menu: string;
   nav_about: string;
   nav_support: string;
   nav_become_host: string;
@@ -99,6 +119,17 @@ export interface MessageDictionary {
   home_meta_title_signed_in: string;
   home_meta_desc: string;
   home_error_load: string;
+  ai_match_per_night: string;
+  chat_suggest_1: string;
+  chat_suggest_2: string;
+  chat_suggest_3: string;
+  chat_suggest_4: string;
+  chat_placeholder: string;
+  chat_send: string;
+  chat_new: string;
+  chat_error_generic: string;
+  chat_retry: string;
+  chat_thinking: string;
   home_recommended_personalizing: string;
   home_recommended_eyebrow: string;
   home_recommended_title: string;
@@ -793,6 +824,26 @@ export interface MessageDictionary {
 const en: MessageDictionary = {
   nav_home: "Home",
   nav_hotels: "Hotels",
+  nav_ai: "Meomul AI",
+  ai_meta_description: "Describe your trip and Meomul AI suggests stays from live listings in Korea.",
+  ai_welcome_title: "Where are you headed?",
+  ai_welcome_sub: "Tell me the city, your dates, who's coming and your budget. I'll check Meomul's listings and suggest a few stays.",
+  ai_powered: "Meomul AI runs on Claude and uses this site's live listings. It can make mistakes, so check the hotel page before you book.",
+  ai_disclaimer: "Meomul AI can make mistakes. Check the hotel page before you book.",
+  ai_stays_label: "Suggested stays",
+  ai_status_search: "Searching stays",
+  ai_status_search_city: "Searching stays in {{city}}",
+  ai_status_details: "Reading hotel details",
+  ai_stop: "Stop",
+  ai_followup_cheaper: "Show cheaper options",
+  ai_followup_breakfast: "Only with breakfast included",
+  ai_followup_compare: "Compare these stays",
+  ai_followup_cheaper_prompt: "Show me cheaper options than these for the same trip.",
+  ai_followup_breakfast_prompt: "Only show stays with breakfast included, for the same trip.",
+  ai_followup_compare_prompt: "Compare the stays you showed me: price for my trip, location, facilities and cancellation. Which one would you pick?",
+  ai_bar_placeholder: "Not sure where to stay? Describe your trip to Meomul AI",
+  ai_bar_submit: "Ask",
+  ai_help_menu: "Ask Meomul AI",
   nav_about: "About",
   nav_support: "Support",
   nav_become_host: "Become a Host",
@@ -910,6 +961,17 @@ const en: MessageDictionary = {
   home_meta_desc:
     "Discover verified hotels, real guest reviews, live deals, and personalized recommendations across Korea.",
   home_error_load: "Failed to load homepage data right now.",
+  ai_match_per_night: "a night",
+  chat_suggest_1: "A romantic weekend in Busan",
+  chat_suggest_2: "Hotels near Gangnam station under 200k",
+  chat_suggest_3: "Family stay in Jeju with a pool",
+  chat_suggest_4: "Which area of Seoul is best for a first visit?",
+  chat_placeholder: "Ask about a stay or a city",
+  chat_send: "Send",
+  chat_new: "New chat",
+  chat_error_generic: "The reply didn't come through. Try again.",
+  chat_retry: "Try again",
+  chat_thinking: "Thinking",
   home_recommended_personalizing: "Personalizing...",
   home_recommended_eyebrow: "Recommended Stays",
   home_recommended_title: "Recommendations",
@@ -1662,6 +1724,26 @@ const ko: MessageDictionary = {
   ...en,
   nav_home: "홈",
   nav_hotels: "호텔",
+  nav_ai: "Meomul AI",
+  ai_meta_description: "여행을 설명하면 Meomul AI가 한국의 숙소를 추천해 드립니다.",
+  ai_welcome_title: "어디로 떠나시나요?",
+  ai_welcome_sub: "도시, 날짜, 인원, 예산을 알려 주세요. Meomul 숙소를 확인해 몇 곳을 추천해 드릴게요.",
+  ai_powered: "Meomul AI는 Claude로 작동하며 이 사이트의 숙소 정보를 사용합니다. 실수할 수 있으니 예약 전에 숙소 페이지를 확인하세요.",
+  ai_disclaimer: "Meomul AI는 실수할 수 있습니다. 예약 전에 숙소 페이지를 확인하세요.",
+  ai_stays_label: "추천 숙소",
+  ai_status_search: "숙소 찾는 중",
+  ai_status_search_city: "{{city}}에서 숙소 찾는 중",
+  ai_status_details: "숙소 정보 확인 중",
+  ai_stop: "중지",
+  ai_followup_cheaper: "더 저렴한 곳",
+  ai_followup_breakfast: "조식 포함만",
+  ai_followup_compare: "이 숙소들 비교",
+  ai_followup_cheaper_prompt: "같은 여행 조건으로 이보다 저렴한 곳을 보여 주세요.",
+  ai_followup_breakfast_prompt: "같은 여행 조건으로 조식 포함 숙소만 보여 주세요.",
+  ai_followup_compare_prompt: "보여 주신 숙소를 비교해 주세요: 내 여행 기준 가격, 위치, 시설, 취소 규정. 어디를 추천하시나요?",
+  ai_bar_placeholder: "어디에 묵을지 고민되나요? Meomul AI에게 여행을 설명해 보세요",
+  ai_bar_submit: "묻기",
+  ai_help_menu: "Meomul AI에게 묻기",
   nav_about: "소개",
   nav_support: "지원",
   nav_become_host: "호스트 되기",
@@ -1769,6 +1851,17 @@ const ko: MessageDictionary = {
   home_meta_desc:
     "검증된 호텔, 실제 후기, 실시간 특가, 맞춤 추천을 통해 한국 전역의 숙소를 찾아보세요.",
   home_error_load: "지금은 홈 데이터를 불러오지 못했습니다.",
+  ai_match_per_night: "1박",
+  chat_suggest_1: "부산 로맨틱 주말",
+  chat_suggest_2: "강남역 근처 20만원 이하 호텔",
+  chat_suggest_3: "제주 수영장 가족 숙소",
+  chat_suggest_4: "서울 첫 방문, 어느 동네가 좋을까요?",
+  chat_placeholder: "숙소나 도시에 대해 물어보세요",
+  chat_send: "보내기",
+  chat_new: "새 대화",
+  chat_error_generic: "답변을 받지 못했습니다. 다시 시도하세요.",
+  chat_retry: "다시 시도",
+  chat_thinking: "생각하는 중",
   home_recommended_personalizing: "맞춤 추천 준비 중...",
   home_recommended_eyebrow: "추천 숙소",
   home_recommended_title: "추천 컬렉션",
@@ -2066,6 +2159,26 @@ const ru: MessageDictionary = {
   ...en,
   nav_home: "Главная",
   nav_hotels: "Отели",
+  nav_ai: "Meomul AI",
+  ai_meta_description: "Опишите поездку, и Meomul AI подберёт жильё в Корее.",
+  ai_welcome_title: "Куда отправляетесь?",
+  ai_welcome_sub: "Назовите город, даты, кто едет и бюджет. Я проверю объявления Meomul и предложу несколько вариантов.",
+  ai_powered: "Meomul AI работает на Claude и использует объявления этого сайта. Он может ошибаться, поэтому проверьте страницу отеля перед бронированием.",
+  ai_disclaimer: "Meomul AI может ошибаться. Перед бронированием проверьте страницу отеля.",
+  ai_stays_label: "Предложенные варианты",
+  ai_status_search: "Ищу жильё",
+  ai_status_search_city: "Ищу жильё: {{city}}",
+  ai_status_details: "Смотрю детали отеля",
+  ai_stop: "Остановить",
+  ai_followup_cheaper: "Подешевле",
+  ai_followup_breakfast: "Только с завтраком",
+  ai_followup_compare: "Сравнить эти варианты",
+  ai_followup_cheaper_prompt: "Покажите варианты дешевле этих для той же поездки.",
+  ai_followup_breakfast_prompt: "Покажите только варианты с завтраком для той же поездки.",
+  ai_followup_compare_prompt: "Сравните показанные варианты: цена за мою поездку, расположение, удобства и отмена. Что бы вы выбрали?",
+  ai_bar_placeholder: "Не знаете, где остановиться? Опишите поездку Meomul AI",
+  ai_bar_submit: "Спросить",
+  ai_help_menu: "Спросить Meomul AI",
   nav_about: "О платформе",
   nav_support: "Поддержка",
   nav_become_host: "Стать хостом",
@@ -2177,6 +2290,17 @@ const ru: MessageDictionary = {
   home_meta_desc:
     "Открывайте проверенные отели, реальные отзывы гостей, живые скидки и персональные рекомендации по всей Корее.",
   home_error_load: "Сейчас не удалось загрузить данные главной страницы.",
+  ai_match_per_night: "за ночь",
+  chat_suggest_1: "Романтические выходные в Пусане",
+  chat_suggest_2: "Отели у станции Каннам до 200 тыс. вон",
+  chat_suggest_3: "Семейный отдых на Чеджу с бассейном",
+  chat_suggest_4: "Какой район Сеула лучше для первой поездки?",
+  chat_placeholder: "Спросите о жилье или городе",
+  chat_send: "Отправить",
+  chat_new: "Новый чат",
+  chat_error_generic: "Ответ не пришёл. Попробуйте ещё раз.",
+  chat_retry: "Повторить",
+  chat_thinking: "Думаю",
   home_recommended_personalizing: "Персонализация...",
   home_recommended_eyebrow: "Рекомендованные варианты",
   home_recommended_title: "Рекомендации",
@@ -2481,6 +2605,26 @@ const uz: MessageDictionary = {
   ...en,
   nav_home: "Bosh sahifa",
   nav_hotels: "Mehmonxonalar",
+  nav_ai: "Meomul AI",
+  ai_meta_description: "Safaringizni yozing, Meomul AI Koreyadagi joylarni tavsiya qiladi.",
+  ai_welcome_title: "Qayerga borasiz?",
+  ai_welcome_sub: "Shahar, sanalar, kimlar borishi va byudjetni yozing. Meomul e'lonlarini tekshirib, bir nechta joy taklif qilaman.",
+  ai_powered: "Meomul AI Claude'da ishlaydi va shu saytdagi e'lonlardan foydalanadi. Xato qilishi mumkin, shuning uchun bron qilishdan oldin mehmonxona sahifasini tekshiring.",
+  ai_disclaimer: "Meomul AI xato qilishi mumkin. Bron qilishdan oldin mehmonxona sahifasini tekshiring.",
+  ai_stays_label: "Tavsiya etilgan joylar",
+  ai_status_search: "Joylar qidirilmoqda",
+  ai_status_search_city: "{{city}}da joylar qidirilmoqda",
+  ai_status_details: "Mehmonxona ma'lumotlari o'qilmoqda",
+  ai_stop: "To'xtatish",
+  ai_followup_cheaper: "Arzonroq variantlar",
+  ai_followup_breakfast: "Faqat nonushta bilan",
+  ai_followup_compare: "Bu joylarni solishtirish",
+  ai_followup_cheaper_prompt: "Xuddi shu safar uchun bulardan arzonroq variantlarni ko'rsating.",
+  ai_followup_breakfast_prompt: "Xuddi shu safar uchun faqat nonushta kiritilgan joylarni ko'rsating.",
+  ai_followup_compare_prompt: "Ko'rsatgan joylaringizni solishtiring: safarim uchun narx, joylashuv, qulayliklar va bekor qilish shartlari. Qaysi birini tanlagan bo'lardingiz?",
+  ai_bar_placeholder: "Qayerda qolishni bilmayapsizmi? Safaringizni Meomul AI'ga yozing",
+  ai_bar_submit: "So'rash",
+  ai_help_menu: "Meomul AI'dan so'rash",
   nav_about: "Platforma haqida",
   nav_support: "Yordam",
   nav_my_bookings: "Mening bronlarim",
@@ -2596,6 +2740,17 @@ const uz: MessageDictionary = {
   home_meta_desc:
     "Koreya bo'ylab tasdiqlangan mehmonxonalar, haqiqiy sharhlar, jonli chegirmalar va shaxsiy tavsiyalarni kashf eting.",
   home_error_load: "Hozir bosh sahifa ma'lumotlarini yuklab bo'lmadi.",
+  ai_match_per_night: "bir kecha",
+  chat_suggest_1: "Busanda romantik dam olish kunlari",
+  chat_suggest_2: "Gangnam bekati yonida 200 mingdan arzon",
+  chat_suggest_3: "Jejuda basseynli oilaviy joy",
+  chat_suggest_4: "Seulga birinchi safar uchun qaysi hudud yaxshi?",
+  chat_placeholder: "Joy yoki shahar haqida so'rang",
+  chat_send: "Yuborish",
+  chat_new: "Yangi suhbat",
+  chat_error_generic: "Javob kelmadi. Qayta urinib ko'ring.",
+  chat_retry: "Qayta urinish",
+  chat_thinking: "O'ylayapman",
   home_recommended_personalizing: "Moslashtirilmoqda...",
   home_recommended_eyebrow: "Tavsiya etilgan turar joylar",
   home_recommended_title: "Tavsiyalar",

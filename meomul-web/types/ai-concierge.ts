@@ -6,7 +6,7 @@ export interface AskStayConciergeInput {
   checkOut?: string;
   guests?: number;
   budgetMax?: number;
-  language?: "en" | "ko";
+  language?: string;
 }
 
 export interface StayIntentDto {
@@ -22,13 +22,20 @@ export interface StayIntentDto {
   roomPreferences: string[];
   safetyPreferences: string[];
   transportPreferences: string[];
-  language: "en" | "ko";
+  language: string;
   confidence: number;
 }
 
 export interface StayCandidateDto {
   hotelId: string;
   hotelTitle: string;
+  hotelImage?: string | null;
+  hotelLocation?: string | null;
+  hotelDistrict?: string | null;
+  hotelRating?: number | null;
+  hotelReviews?: number | null;
+  /** One-line pitch written by Claude; absent on rule-based results. */
+  headline?: string | null;
   roomId?: string | null;
   roomName?: string | null;
   fitScore: number;

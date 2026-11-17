@@ -8,6 +8,7 @@ import { AppLogo } from "@/components/brand/app-logo";
 import { Footer } from "@/components/layout/footer";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { PriceLockFab } from "@/components/layout/price-lock-fab";
+import { MeomulAiMark } from "@/components/ai/meomul-ai-mark";
 import { useToast } from "@/components/ui/toast-provider";
 import { GET_MY_UNREAD_CHAT_COUNT_QUERY } from "@/graphql/chat.gql";
 import { GET_MEMBER_QUERY } from "@/graphql/member.gql";
@@ -74,6 +75,7 @@ const NAV_LINKS = {
   guest: [
     { href: "/", labelKey: "nav_home" },
     { href: "/hotels", labelKey: "nav_hotels" },
+    { href: "/ai", labelKey: "nav_ai" },
     { href: "/become-a-host", labelKey: "nav_become_host" },
     { href: "/about", labelKey: "nav_about" },
     { href: "/support", labelKey: "nav_support" },
@@ -81,6 +83,7 @@ const NAV_LINKS = {
   user: [
     { href: "/", labelKey: "nav_home" },
     { href: "/hotels", labelKey: "nav_hotels" },
+    { href: "/ai", labelKey: "nav_ai" },
     { href: "/bookings", labelKey: "nav_my_bookings" },
     { href: "/about", labelKey: "nav_about" },
     { href: "/support", labelKey: "nav_support" },
@@ -614,12 +617,16 @@ function SupportFab({
   isRoomDetailPage,
   onStartSupport,
   onOpenInbox,
+  aiHref,
 }: {
   hasPriceLockWidget: boolean;
   isRoomDetailPage: boolean;
   onStartSupport: () => void;
   onOpenInbox: () => void;
+  /** Meomul AI, with the current hotel as context when there is one. */
+  aiHref: string;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -651,6 +658,14 @@ function SupportFab({
             : "pointer-events-none translate-y-2 opacity-0"
         }`}
       >
+        <Link
+          href={aiHref}
+          onClick={() => setOpen(false)}
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <MeomulAiMark size={14} className="text-harbor" innerClassName="fill-paper" />
+          {t("ai_help_menu")}
+        </Link>
         <button
           type="button"
           onClick={() => {
@@ -697,6 +712,7 @@ export function SiteFrame({ children }: PropsWithChildren) {
   const isHomeRoute = router.pathname === "/";
   const isHotelDetailRoute = router.pathname === "/hotels/[hotelId]";
   const isHotelsRoute = router.pathname === "/hotels";
+  const isAiRoute = router.pathname === "/ai";
   const isBecomeHostRoute = router.pathname === "/become-a-host";
   const isHostSignupRoute = router.pathname === "/host/signup";
   const isHostApplyRoute = router.pathname === "/host/apply";
@@ -761,7 +777,7 @@ export function SiteFrame({ children }: PropsWithChildren) {
   const canTrackUnread = hasValidSession;
   const isChatRoute =
     router.pathname === "/chats" || router.pathname === "/chats/[chatId]";
-  const showFloatingWidgets = !isChatRoute && !isHostFlowRoute;
+  const showFloatingWidgets = !isChatRoute && !isHostFlowRoute && !isAiRoute;
   const isRoomDetailPage = router.pathname === "/rooms/[roomId]";
   const isNotificationsRoute = router.pathname === "/notifications";
   const shouldShowPriceLockWidget = true;
@@ -1226,6 +1242,8 @@ export function SiteFrame({ children }: PropsWithChildren) {
         children
       ) : isHotelDetailRoute ? (
         <div className="w-full px-3 pb-8 pt-0 sm:px-6 sm:py-10">{children}</div>
+      ) : isAiRoute ? (
+        <div className="w-full px-3 sm:px-6">{children}</div>
       ) : isHotelsRoute ? (
         <div className="w-full px-3 pb-8 pt-2 sm:px-6 sm:pb-10 sm:pt-5">{children}</div>
       ) : (
@@ -1246,6 +1264,7 @@ export function SiteFrame({ children }: PropsWithChildren) {
           isRoomDetailPage={isRoomDetailPage}
           onStartSupport={openSupportChat}
           onOpenInbox={openInbox}
+          aiHref={isHotelDetailRoute && typeof router.query.hotelId === "string" ? `/ai?hotel=${router.query.hotelId}` : "/ai"}
         />
       ) : null}
       <ChatDrawer
@@ -1253,7 +1272,7 @@ export function SiteFrame({ children }: PropsWithChildren) {
         onClose={() => setIsChatPanelOpen(false)}
         unreadCount={unreadCount}
       />
-      {isHostFlowRoute ? null : <Footer />}
+      {isHostFlowRoute || isAiRoute ? null : <Footer />}
     </div>
   );
 }

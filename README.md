@@ -101,6 +101,29 @@ Configure with `SMS_PROVIDER`:
 
 **The API refuses to start in production with `SMS_PROVIDER=log`**, since that would mean
 printing reset codes to stdout while appearing to work.
+- `disabled` — sends nothing and reports failure, for a public demo with no SMS account.
+  Password recovery is unavailable while it is set.
+
+## Meomul AI (Claude)
+
+**Meomul AI** lives on its own page, `/ai`, linked from the main nav, the help menu (with the current hotel as context on hotel pages) and a one-line prompt on `/hotels` that opens `/ai?q=...`.
+
+- **The page:** guests describe a trip in their own words, and the reply streams in. Claude works through three tools:
+  - `search_hotels` searches the live inventory, with filters for city, district, budget, guests, purpose and amenities.
+  - `get_hotel_details` reads one hotel's rooms, policies and reviews.
+  - `show_stays` shows Claude's picks as cards under the reply. These are the only cards the guest sees.
+- **The endpoint:** `POST /ai/chat`, streamed as Server-Sent Events (`status`, `delta`, `hotels`, `done`, `error`). A watchdog ends a reply that stops moving, so the guest gets a clear error with a retry instead of a spinner that never ends.
+- **The `askStayConcierge` mutation** is still available. Claude reads the request into filters, the API pre-scores real candidates, and Claude picks up to three and explains them. Picks that don't match a real candidate are dropped, and prices, dates and trust signals always come from our own data.
+
+Configuration (`meomul/.env`):
+
+- `ANTHROPIC_API_KEY`: without it the concierge uses the rule-based matcher, and the chat reports that it is switched off.
+- `ANTHROPIC_MODEL`: defaults to `claude-opus-5-5`.
+- `AI_CHAT_PER_VISITOR_PER_HOUR`, `AI_MATCH_PER_VISITOR_PER_HOUR` and `AI_DAILY_LIMIT`: the spend guard for a public site (defaults 30, 12 and 600). Behind Cloudflare, visitors are keyed by `CF-Connecting-IP`.
+
+Requests use server-side refusal fallbacks (`fallbacks: "default"`) and low effort. The system prompt and tool list are byte-stable so the prompt cache can serve repeat requests. Token use is logged per call as `Claude ... usage`.
+
+For a single-host deployment (web and API on one Docker network), build the web image with `INTERNAL_API_URL` and `NEXT_PUBLIC_MEDIA_SAME_ORIGIN=1`, and run it with `INTERNAL_GRAPHQL_URL`. Server-side rendering, the `/graphql` and `/upload` proxies, and `/uploads` media then stay on the private network instead of going out to the public API host and back.
 
 ## Logging
 

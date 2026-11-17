@@ -34,5 +34,5 @@ export class AskStayConciergeInput {
 	@IsOptional()
 	@IsString()
 	@Field(() => String, { nullable: true })
-	language?: 'en' | 'ko';
+	language?: string;
 }

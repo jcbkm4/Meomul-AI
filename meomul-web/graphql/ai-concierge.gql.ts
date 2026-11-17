@@ -26,6 +26,12 @@ export const ASK_STAY_CONCIERGE_MUTATION = gql`
       candidates {
         hotelId
         hotelTitle
+        hotelImage
+        hotelLocation
+        hotelDistrict
+        hotelRating
+        hotelReviews
+        headline
         roomId
         roomName
         fitScore

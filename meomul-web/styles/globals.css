@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./meomul-ai.css";
 
 :root {
   --background: #f3f7fb;

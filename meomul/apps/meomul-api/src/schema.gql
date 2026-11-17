@@ -1322,7 +1322,13 @@ type StayCandidateDto {
   cheapestPrice: Int
   estimatedPrice: Int
   fitScore: Int!
+  headline: String
+  hotelDistrict: String
   hotelId: String!
+  hotelImage: String
+  hotelLocation: String
+  hotelRating: Float
+  hotelReviews: Int
   hotelTitle: String!
   priceInsights: [String!]!
   reasons: [String!]!
